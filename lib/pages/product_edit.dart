@@ -26,14 +26,27 @@ class _ProductEditPageState extends State<ProductEditPage> {
   final _titleFocusNode = FocusNode();
   final _descriptionFocusNode = FocusNode();
   final _priceFocusNode = FocusNode();
+  final _titleTextEditController = TextEditingController();
 
   Widget _buildTitleTextField(Product product) {
+    if (product == null && _titleTextEditController.text.trim() == '') {
+      _titleTextEditController.text = '';
+    } else if (product != null && _titleTextEditController.text.trim() == '') {
+      _titleTextEditController.text = product.title;
+    } else if (product != null && _titleTextEditController.text.trim() != '') {
+      _titleTextEditController.text = _titleTextEditController.text;
+    } else if (product == null && _titleTextEditController.text.trim() != '') {
+      _titleTextEditController.text = _titleTextEditController.text;
+    } else {
+      _titleTextEditController.text = '';
+    }
     return EnsureVisibileWhenFocused(
       focusNode: _titleFocusNode,
       child: TextFormField(
         focusNode: _titleFocusNode,
         decoration: InputDecoration(labelText: 'Product Title'),
-        initialValue: product == null ? '' : product.title.toString(),
+        controller: _titleTextEditController,
+        //initialValue: product == null ? '' : product.title.toString(),
         validator: (String value) {
           if (value.isEmpty || value.length < 5) {
             return 'Title is required and should be 5+ characters long.';
@@ -158,7 +171,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
     }
     _formKey.currentState.save();
     if (selectedProductIndex == -1) {
-      addProduct(_formData['title'], _formData['description'],
+      addProduct(_titleTextEditController.text, _formData['description'],
               _formData['image'], _formData['price'], _formData['location'])
           .then((bool success) {
         if (success) {
@@ -183,7 +196,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
       });
     } else {
       updateProduct(
-        _formData['title'],
+        _titleTextEditController.text,
         _formData['description'],
         _formData['image'],
         _formData['price'],

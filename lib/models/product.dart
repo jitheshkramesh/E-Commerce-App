@@ -20,6 +20,6 @@ final LocationData location;
       @required this.image,
       @required this.userEmail,
       @required this.userId,
-      @Required this.location,
+      @required this.location,
       this.isFavorite = false});
 }
