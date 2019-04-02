@@ -7,7 +7,14 @@ packages:
       name: async
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.1.0"
+    version: "2.0.8"
+  boolean_selector:
+    dependency: transitive
+    description:
+      name: boolean_selector
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.0.4"
   charcode:
     dependency: transitive
     description:
@@ -31,6 +38,11 @@ packages:
     version: "0.1.2"
   flutter:
     dependency: "direct main"
+    description: flutter
+    source: sdk
+    version: "0.0.0"
+  flutter_test:
+    dependency: "direct dev"
     description: flutter
     source: sdk
     version: "0.0.0"
@@ -65,19 +77,17 @@ packages:
   map_view:
     dependency: "direct main"
     description:
-      path: "."
-      ref: HEAD
-      resolved-ref: "5b631c499783936dfc462039274a6f5c59323068"
-      url: "git://github.com/Eimji/flutter_google_map_view.git"
-    source: git
-    version: "0.0.15"
+      name: map_view
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.0.14"
   matcher:
     dependency: transitive
     description:
       name: matcher
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.12.5"
+    version: "0.12.3+1"
   meta:
     dependency: transitive
     description:
@@ -99,13 +109,20 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.6.2"
+  pedantic:
+    dependency: transitive
+    description:
+      name: pedantic
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.4.0"
   quiver:
     dependency: transitive
     description:
       name: quiver
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.0.2"
+    version: "2.0.1"
   rxdart:
     dependency: "direct main"
     description:
@@ -138,7 +155,7 @@ packages:
       name: source_span
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.5.5"
+    version: "1.5.4"
   stack_trace:
     dependency: transitive
     description:
@@ -146,6 +163,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.9.3"
+  stream_channel:
+    dependency: transitive
+    description:
+      name: stream_channel
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.6.8"
   string_scanner:
     dependency: transitive
     description:
@@ -160,6 +184,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.1.0"
+  test_api:
+    dependency: transitive
+    description:
+      name: test_api
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.2.2"
   typed_data:
     dependency: transitive
     description:
@@ -170,12 +201,17 @@ packages:
   uri:
     dependency: transitive
     description:
-      path: "."
-      ref: HEAD
-      resolved-ref: "04417bbc6b365cfd69a0009dfa4b358432f6e8bd"
-      url: "git://github.com/Eimji/uri.dart"
-    source: git
-    version: "0.11.3"
+      name: uri
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.11.3+1"
+  url_launcher:
+    dependency: "direct main"
+    description:
+      name: url_launcher
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "5.0.2"
   utf:
     dependency: transitive
     description:
@@ -192,4 +228,4 @@ packages:
     version: "2.0.8"
 sdks:
   dart: ">=2.1.0 <3.0.0"
-  flutter: ">=0.1.4 <2.0.0"
+  flutter: ">=0.5.6 <2.0.0"

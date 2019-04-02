@@ -8,13 +8,15 @@ import './pages/product.dart';
 import './pages/auth.dart';
 import './scoped_model/main.dart';
 import './models/product.dart';
+import './widgets/helpers/custome_route.dart';
+import './shared/global_config.dart';
 //import 'package:flutter/rendering.dart';
 
 void main() {
   //debugPaintSizeEnabled=true;
   // debugPaintBaselinesEnabled=true;
   // debugPaintPointersEnabled=true;
-  MapView.setApiKey('AIzaSyAg0kfPUIOq8wmhlhRf3iTQvujtHoAitB0');
+  MapView.setApiKey(apiKey);
   runApp(MyApp());
 }
 
@@ -73,7 +75,7 @@ class _MyAppState extends State<MyApp> {
                 _model.allProducts.firstWhere((Product product) {
               return product.id == productId;
             });
-            return MaterialPageRoute<bool>(
+            return CustomeRoute<bool>(
               builder: (BuildContext context) =>
                   _isAuthenticated ? AuthPage() : ProductPage(product),
             );

@@ -8,9 +8,8 @@ import '../../scoped_model/main.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
-  final int _productIndex;
 
-  ProductCard(this.product, this._productIndex);
+  ProductCard(this.product);
 
   Widget _buildTitlePriceRow() {
     return Container(
@@ -20,12 +19,18 @@ class ProductCard extends StatelessWidget {
         children: <Widget>[
           Flexible(
             flex: 2,
-            child: TitleDefault(product.title),
+            child: Flexible(
+              child: TitleDefault(product.title),
+            ),
           ),
-          SizedBox(
-            width: 8.0,
+          Flexible(
+            child: SizedBox(
+              width: 8.0,
+            ),
           ),
-          PriceTag(product.price.toString())
+          Flexible(
+            child: PriceTag(product.price.toString()),
+          )
         ],
       ),
     );
@@ -40,17 +45,20 @@ class ProductCard extends StatelessWidget {
               IconButton(
                 icon: Icon(Icons.info),
                 color: Theme.of(context).accentColor,
-                onPressed: () => Navigator.pushNamed<bool>(
-                    context, '/product/' + model.allProducts[_productIndex].id),
+                onPressed: () {
+                  model.selectProduct(product.id);
+                  Navigator.pushNamed<bool>(context, '/product/' + product.id)
+                      .then((_) => model.selectProduct(null));
+                },
               ),
               IconButton(
-                icon: Icon(model.allProducts[_productIndex].isFavorite
+                icon: Icon(product.isFavorite
                     ? Icons.favorite
                     : Icons.favorite_border),
                 color: Colors.red,
                 onPressed: () {
-                  model.selectProduct(model.allProducts[_productIndex].id);
-                  model.toggleProductFavoriteStatus();
+                  model.selectProduct(product.id);
+                  model.toggleProductFavoriteStatus(product);
                 },
               ),
             ]);
@@ -63,14 +71,20 @@ class ProductCard extends StatelessWidget {
     return Card(
       child: Column(
         children: <Widget>[
-          FadeInImage(
-            image: NetworkImage(product.image),
-            height: 300.0,
-            fit: BoxFit.cover,
-            placeholder: AssetImage('assets/background.jpg'),
+          Hero(
+            tag: product.id,
+            child: FadeInImage(
+              image: NetworkImage(product.image),
+              height: 300.0,
+              fit: BoxFit.cover,
+              placeholder: AssetImage('assets/background.jpg'),
+            ),
           ),
           _buildTitlePriceRow(),
-          AddressTag('Union Square,San Francisco'),
+          SizedBox(
+            height: 10.0,
+          ),
+          AddressTag(product.location.address),
           Text(product.userEmail),
           _buildActionButtons(context),
         ],

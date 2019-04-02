@@ -4,7 +4,6 @@ import 'package:scoped_model/scoped_model.dart';
 import '../scoped_model/main.dart';
 import '../models/auth.dart';
 
-
 class AuthPage extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
@@ -12,12 +11,30 @@ class AuthPage extends StatefulWidget {
   }
 }
 
-class _AuthPageState extends State<AuthPage> {
+class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
   final Map<String, dynamic> _formData = {
     'email': null,
     'password': null,
     'acceptTerms': false
   };
+
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final TextEditingController _passwordTextController = TextEditingController();
+  AuthMode _authMode = AuthMode.Login;
+  AnimationController _controller;
+  Animation<Offset> _slideAnimation;
+
+  void initState() {
+    _controller = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 300),
+    );
+    _slideAnimation =
+        Tween<Offset>(begin: Offset(0.0, -2.0), end: Offset(0.0, 0.0)).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.fastOutSlowIn),
+    );
+    super.initState();
+  }
 
   DecorationImage _buildBackgroundImage() {
     return DecorationImage(
@@ -27,10 +44,6 @@ class _AuthPageState extends State<AuthPage> {
       image: AssetImage('assets/background.jpg'),
     );
   }
-
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final TextEditingController _passwordTextController = TextEditingController();
-  AuthMode _authMode = AuthMode.Login;
 
   Widget _buildEmailTextField() {
     return TextFormField(
@@ -65,15 +78,24 @@ class _AuthPageState extends State<AuthPage> {
   }
 
   Widget _buildPasswordConfirmTextField() {
-    return TextFormField(
-      decoration: InputDecoration(
-          labelText: 'Confirm Password', filled: true, fillColor: Colors.white),
-      obscureText: true,
-      validator: (String value) {
-        if (_passwordTextController.text != value) {
-          return 'Password do not match';
-        }
-      },
+    return FadeTransition(
+      opacity: CurvedAnimation(parent: _controller, curve: Curves.easeIn),
+      child: SlideTransition(
+        position: _slideAnimation,
+        child: TextFormField(
+          decoration: InputDecoration(
+              labelText: 'Confirm Password',
+              filled: true,
+              fillColor: Colors.white),
+          obscureText: true,
+          validator: (String value) {
+            if (_passwordTextController.text != value &&
+                _authMode == AuthMode.Signup) {
+              return 'Password do not match';
+            }
+          },
+        ),
+      ),
     );
   }
 
@@ -95,10 +117,10 @@ class _AuthPageState extends State<AuthPage> {
     }
     Map<String, dynamic> successInformation;
     _formKey.currentState.save();
-  
-      successInformation =
-          await authenticate(_formData['email'], _formData['password'],_authMode);
-    
+
+    successInformation = await authenticate(
+        _formData['email'], _formData['password'], _authMode);
+
     if (successInformation['success']) {
       Navigator.pushReplacementNamed(context, '/');
     } else {
@@ -149,9 +171,7 @@ class _AuthPageState extends State<AuthPage> {
                     SizedBox(
                       height: 10.0,
                     ),
-                    _authMode == AuthMode.Signup
-                        ? _buildPasswordConfirmTextField()
-                        : Container(),
+                    _buildPasswordConfirmTextField(),
                     _buildAcceptSwitch(),
                     SizedBox(
                       height: 10.0,
@@ -161,9 +181,17 @@ class _AuthPageState extends State<AuthPage> {
                           'Switch to ${_authMode == AuthMode.Login ? 'Signup' : 'Login'}'),
                       onPressed: () {
                         setState(() {
-                          _authMode = _authMode == AuthMode.Login
-                              ? AuthMode.Signup
-                              : AuthMode.Login;
+                          if (_authMode == AuthMode.Login) {
+                            setState(() {
+                              _authMode = AuthMode.Signup;
+                            });
+                            _controller.forward();
+                          } else {
+                            setState(() {
+                              _authMode = AuthMode.Login;
+                            });
+                            _controller.reverse();
+                          }
                         });
                       },
                     ),
