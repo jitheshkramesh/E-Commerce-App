@@ -11,6 +11,7 @@ class ProductPage extends StatelessWidget {
   final Product product;
   ProductPage(this.product);
 
+//map view commented
   void _showMap() {
     final List<Marker> markers = <Marker>[
       Marker('position', 'Position', product.location.latitude,
@@ -42,6 +43,7 @@ class ProductPage extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
         GestureDetector(
+          //map view commented
           onTap: _showMap,
           child: Text(
             address,

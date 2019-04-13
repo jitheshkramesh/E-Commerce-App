@@ -1,10 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
+import 'package:flutter/cupertino.dart';
 
-import '../widgets/helpers/ensure_visibile.dart';
+import '../widgets/helpers/ensure_visible.dart';
 import '../widgets/form_inputs/location.dart';
 import '../widgets/form_inputs/image.dart';
+import '../widgets/ui_elements/adaptive_progress_indicator.dart';
 import '../models/product.dart';
 import '../scoped_model/main.dart';
 import '../models/location_data.dart';
@@ -44,7 +46,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
     } else {
       _titleTextEditController.text = '';
     }
-    return EnsureVisibileWhenFocused(
+    return EnsureVisibleWhenFocused(
       focusNode: _titleFocusNode,
       child: TextFormField(
         focusNode: _titleFocusNode,
@@ -67,7 +69,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
         _descriptionTextController.text.trim() == '') {
       _descriptionTextController.text = product.description;
     }
-    return EnsureVisibileWhenFocused(
+    return EnsureVisibleWhenFocused(
       focusNode: _descriptionFocusNode,
       child: TextFormField(
         focusNode: _descriptionFocusNode,
@@ -92,7 +94,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
     } else if (product != null && _priceTextController.text.trim() == '') {
       _priceTextController.text = product.price.toString();
     }
-    return EnsureVisibileWhenFocused(
+    return EnsureVisibleWhenFocused(
       focusNode: _priceFocusNode,
       child: TextFormField(
         focusNode: _priceFocusNode,
@@ -117,7 +119,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
     return ScopedModelDescendant<MainModel>(
       builder: (BuildContext context, Widget child, MainModel model) {
         return model.isLoading
-            ? Center(child: CircularProgressIndicator())
+            ? Center(child: AdaptiveProgressIndicator())
             : RaisedButton(
                 child: Text('Save'),
                 textColor: Colors.white,
@@ -198,7 +200,8 @@ class _ProductEditPageState extends State<ProductEditPage> {
               _titleTextEditController.text,
               _descriptionTextController.text,
               _formData['image'],
-              double.parse(_priceTextController.text.replaceFirst(RegExp(r','), '.')),
+              double.parse(
+                  _priceTextController.text.replaceFirst(RegExp(r','), '.')),
               _formData['location'])
           .then((bool success) {
         if (success) {
@@ -244,6 +247,8 @@ class _ProductEditPageState extends State<ProductEditPage> {
             : Scaffold(
                 appBar: AppBar(
                   title: Text('Edit Product'),
+                  elevation:
+                  Theme.of(context).platform == TargetPlatform.iOS ? 0.0 : 4.0,
                 ),
                 body: pageContent,
               );

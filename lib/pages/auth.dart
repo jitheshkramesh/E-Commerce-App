@@ -3,6 +3,7 @@ import 'package:scoped_model/scoped_model.dart';
 
 import '../scoped_model/main.dart';
 import '../models/auth.dart';
+import '../widgets/ui_elements/adaptive_progress_indicator.dart';
 
 class AuthPage extends StatefulWidget {
   @override
@@ -113,6 +114,7 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
 
   void _submitForm(Function authenticate) async {
     if (!_formKey.currentState.validate() || !_formData['acceptTerms']) {
+      print('auth failed');
       return;
     }
     Map<String, dynamic> successInformation;
@@ -122,7 +124,8 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
         _formData['email'], _formData['password'], _authMode);
 
     if (successInformation['success']) {
-      Navigator.pushReplacementNamed(context, '/');
+      //Navigator.pushReplacementNamed(context, '/');
+      print('Login success Test');
     } else {
       showDialog(
           context: context,
@@ -202,7 +205,7 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
                       builder: (BuildContext context, Widget child,
                           MainModel model) {
                         return model.isLoading
-                            ? CircularProgressIndicator()
+                            ? AdaptiveProgressIndicator()
                             : RaisedButton(
                                 textColor: Colors.white,
                                 child: Text(_authMode == AuthMode.Login

@@ -16,10 +16,44 @@ class ProductsAdminPage extends StatelessWidget {
           AppBar(
             automaticallyImplyLeading: false,
             title: Text('Choose'),
+            elevation:
+                Theme.of(context).platform == TargetPlatform.iOS ? 0.0 : 4.0,
           ),
           ListTile(
             leading: Icon(Icons.shop),
+            title: Text('Category'),
+            onTap: () {
+              Navigator.pushReplacementNamed(context, '/');
+            },
+          ),
+          Divider(),
+          ListTile(
+            leading: Icon(Icons.shop),
             title: Text('All Products'),
+            onTap: () {
+              Navigator.pushReplacementNamed(context, '/');
+            },
+          ),
+          Divider(),
+          ListTile(
+            leading: Icon(Icons.shop),
+            title: Text('Wished List'),
+            onTap: () {
+              Navigator.pushReplacementNamed(context, '/');
+            },
+          ),
+          Divider(),
+          ListTile(
+            leading: Icon(Icons.shop),
+            title: Text('User Accounts'),
+            onTap: () {
+              Navigator.pushReplacementNamed(context, '/');
+            },
+          ),
+          Divider(),
+          ListTile(
+            leading: Icon(Icons.shopping_cart),
+            title: Text('Cart Items'),
             onTap: () {
               Navigator.pushReplacementNamed(context, '/');
             },
@@ -39,6 +73,8 @@ class ProductsAdminPage extends StatelessWidget {
           drawer: _buildSideDrawer(context),
           appBar: AppBar(
               title: Text('Manage Products'),
+              elevation:
+                  Theme.of(context).platform == TargetPlatform.iOS ? 0.0 : 4.0,
               bottom: TabBar(
                 tabs: <Widget>[
                   Tab(

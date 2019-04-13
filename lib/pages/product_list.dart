@@ -17,7 +17,7 @@ class ProductListPage extends StatefulWidget {
 class _ProductListPageState extends State<ProductListPage> {
   @override
   initState() {
-    widget.model.fetchProducts(onlyforUser: true,clearExisting: true);
+    widget.model.fetchProducts(onlyforUser: true, clearExisting: true);
     super.initState();
   }
 
@@ -51,6 +51,8 @@ class _ProductListPageState extends State<ProductListPage> {
               if (direction == DismissDirection.endToStart) {
                 model.selectProduct(model.allProducts[index].id);
                 model.deleteProduct();
+                Scaffold.of(context).showSnackBar(
+                    new SnackBar(content: new Text('Item dismissed')));
                 print('Swiped end to start');
               } else if (direction == DismissDirection.startToEnd) {
                 print('Swiped start to end');

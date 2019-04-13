@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+
 import 'package:scoped_model/scoped_model.dart';
+
 import './price_tag.dart';
 import './address_tag.dart';
 import '../ui_elements/title_default.dart';
@@ -13,15 +15,12 @@ class ProductCard extends StatelessWidget {
 
   Widget _buildTitlePriceRow() {
     return Container(
-      margin: EdgeInsets.only(top: 10.0),
+      padding: EdgeInsets.only(top: 10.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
           Flexible(
-            flex: 2,
-            child: Flexible(
-              child: TitleDefault(product.title),
-            ),
+            child: TitleDefault(product.title),
           ),
           Flexible(
             child: SizedBox(
@@ -47,7 +46,8 @@ class ProductCard extends StatelessWidget {
                 color: Theme.of(context).accentColor,
                 onPressed: () {
                   model.selectProduct(product.id);
-                  Navigator.pushNamed<bool>(context, '/product/' + product.id)
+                  Navigator
+                      .pushNamed<bool>(context, '/product/' + product.id)
                       .then((_) => model.selectProduct(null));
                 },
               ),
@@ -58,7 +58,7 @@ class ProductCard extends StatelessWidget {
                 color: Colors.red,
                 onPressed: () {
                   model.selectProduct(product.id);
-                  model.toggleProductFavoriteStatus(product);
+                  model.toggleProductFavoriteStatus();
                 },
               ),
             ]);
@@ -77,7 +77,7 @@ class ProductCard extends StatelessWidget {
               image: NetworkImage(product.image),
               height: 300.0,
               fit: BoxFit.cover,
-              placeholder: AssetImage('assets/background.jpg'),
+              placeholder: AssetImage('assets/food.jpg'),
             ),
           ),
           _buildTitlePriceRow(),
@@ -85,8 +85,7 @@ class ProductCard extends StatelessWidget {
             height: 10.0,
           ),
           AddressTag(product.location.address),
-          Text(product.userEmail),
-          _buildActionButtons(context),
+          _buildActionButtons(context)
         ],
       ),
     );

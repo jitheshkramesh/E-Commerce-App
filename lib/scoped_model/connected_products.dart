@@ -85,8 +85,8 @@ mixin ProductsModel on ConnectedProductsModel {
       final streamedResponse = await imageUploadRequest.send();
       final response = await http.Response.fromStream(streamedResponse);
       if (response.statusCode != 200 && response.statusCode != 201) {
-        print('Something went wrong');
-        print(json.decode(response.body));
+        print('Something went wrong Upload Image');
+        print(json.decode(response.body) + 'from print method');
         return null;
       }
       final responseData = json.decode(response.body);
@@ -137,6 +137,8 @@ mixin ProductsModel on ConnectedProductsModel {
           description: description,
           image: uploadData['imageUrl'],
           imagePath: uploadData['imagePath'],
+          // image: '',
+          // imagePath: '',
           price: price,
           location: locData,
           userEmail: _authenticatedUser.email,
@@ -187,7 +189,7 @@ mixin ProductsModel on ConnectedProductsModel {
       'userId': selectedProduct.userId
     };
     try {
-       await http.put(
+      await http.put(
           'https://flutter-products-df0ff.firebaseio.com/products/${selectedProduct.id}.json?auth=${_authenticatedUser.token}',
           body: json.encode(updateData));
 
@@ -283,43 +285,48 @@ mixin ProductsModel on ConnectedProductsModel {
     });
   }
 
-  void toggleProductFavoriteStatus(Product toggledProduct) async {
-    final bool isCurrentlyFavorite = toggledProduct.isFavorite;
+  void toggleProductFavoriteStatus() async {
+    final bool isCurrentlyFavorite =
+        selectedProduct.isFavorite == null ? false : selectedProduct.isFavorite;
     final bool newFavoriteStatus = !isCurrentlyFavorite;
     final int toggledProductIndex = _products.indexWhere((Product product) {
-      return product.id == toggledProduct.id;
+      return product.id == selectedProduct.id;
     });
     final Product updateProduct = Product(
-        id: toggledProduct.id,
-        title: toggledProduct.title,
-        description: toggledProduct.description,
-        price: toggledProduct.price,
-        image: toggledProduct.image,
-        imagePath: toggledProduct.imagePath,
-        location: toggledProduct.location,
-        userEmail: toggledProduct.userEmail,
-        userId: toggledProduct.userId,
+        id: selectedProduct.id,
+        title: selectedProduct.title,
+        description: selectedProduct.description,
+        price: selectedProduct.price,
+        image: selectedProduct.image,
+        imagePath: selectedProduct.imagePath,
+        // image: '',
+        // imagePath: '',
+        location: selectedProduct.location,
+        userEmail: selectedProduct.userEmail,
+        userId: selectedProduct.userId,
         isFavorite: newFavoriteStatus);
     _products[toggledProductIndex] = updateProduct;
     notifyListeners();
     http.Response response;
     if (newFavoriteStatus) {
       response = await http.put(
-          'https://flutter-products-df0ff.firebaseio.com/products/${toggledProduct.id}/wishlistUsers/${_authenticatedUser.id}.json?auth=${_authenticatedUser.token}',
+          'https://flutter-products-df0ff.firebaseio.com/products/${selectedProduct.id}/wishlistUsers/${_authenticatedUser.id}.json?auth=${_authenticatedUser.token}',
           body: json.encode(true));
       if (response.statusCode != 200 && response.statusCode != 201) {
         final Product updateProduct = Product(
-            id: toggledProduct.id,
-            title: toggledProduct.title,
-            description: toggledProduct.description,
-            price: toggledProduct.price,
-            image: toggledProduct.image,
-            imagePath: toggledProduct.imagePath,
-            location: toggledProduct.location,
-            userEmail: toggledProduct.userEmail,
-            userId: toggledProduct.userId,
+            id: selectedProduct.id,
+            title: selectedProduct.title,
+            description: selectedProduct.description,
+            price: selectedProduct.price,
+            image: selectedProduct.image,
+            imagePath: selectedProduct.imagePath,
+            // image: '',
+            // imagePath: '',
+            location: selectedProduct.location,
+            userEmail: selectedProduct.userEmail,
+            userId: selectedProduct.userId,
             isFavorite: !newFavoriteStatus);
-        _products[toggledProductIndex] = updateProduct;
+        _products[selectedProductIndex] = updateProduct;
         notifyListeners();
       }
     } else {
@@ -333,8 +340,10 @@ mixin ProductsModel on ConnectedProductsModel {
           title: selectedProduct.title,
           description: selectedProduct.description,
           price: selectedProduct.price,
-          image: selectedProduct.image,
-          imagePath: selectedProduct.imagePath,
+          // image: selectedProduct.image,
+          // imagePath: selectedProduct.imagePath,
+          image: '',
+          imagePath: '',
           location: selectedProduct.location,
           userEmail: selectedProduct.userEmail,
           userId: selectedProduct.userId,
@@ -363,6 +372,8 @@ mixin UserModel on ConnectedProductsModel {
   PublishSubject<bool> _userSubject = PublishSubject();
 
   User get user {
+    print('Is authenticated from connected products');
+    print(_authenticatedUser.token);
     return _authenticatedUser;
   }
 
@@ -374,6 +385,7 @@ mixin UserModel on ConnectedProductsModel {
       [AuthMode mode = AuthMode.Login]) async {
     _isLoading = true;
     notifyListeners();
+    print('authentication reached!');
     final Map<String, dynamic> authData = {
       'email': email,
       'password': password,
@@ -392,18 +404,21 @@ mixin UserModel on ConnectedProductsModel {
         headers: {'Content-Type': 'application/json'},
       );
     }
-
+    print('Authentication completed!');
     final Map<String, dynamic> responseData = json.decode(response.body);
     bool hasError = true;
     String message = 'Something went wrong';
+    print('Something went wrong');
     if (responseData.containsKey('idToken')) {
       hasError = false;
       message = 'Authentication succeeded';
+      print(message);
       _authenticatedUser = User(
           id: responseData['localId'],
           email: email,
           token: responseData['idToken']);
       setAuthTimeout(int.parse(responseData['expiresIn']));
+      _userSubject.add(true);
       final DateTime now = DateTime.now();
       final DateTime expiryTime =
           now.add(Duration(seconds: int.parse(responseData['expiresIn'])));
@@ -458,7 +473,10 @@ mixin UserModel on ConnectedProductsModel {
   }
 
   void setAuthTimeout(int time) {
-    _authTimer = Timer(Duration(seconds: time * 10), logout);
+    _authTimer = Timer(Duration(seconds: time), () {
+      logout();
+      _userSubject.add(false);
+    });
   }
 }
 

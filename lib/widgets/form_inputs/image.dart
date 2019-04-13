@@ -1,12 +1,15 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+
 import 'package:image_picker/image_picker.dart';
+
 import '../../models/product.dart';
 
 class ImageInput extends StatefulWidget {
   final Function setImage;
   final Product product;
+
   ImageInput(this.setImage, this.product);
 
   @override
@@ -17,6 +20,18 @@ class ImageInput extends StatefulWidget {
 
 class _ImageInputState extends State<ImageInput> {
   File _imageFile;
+
+  // Future getImage(bool isCamera) async {
+  //   File imageFile;
+  //   if (isCamera) {
+  //     imageFile = await ImagePicker.pickImage(source: ImageSource.camera);
+  //   } else {
+  //     imageFile = await ImagePicker.pickImage(source: ImageSource.gallery);
+  //   }
+  //   setState(() {
+  //     _imageFile = imageFile;
+  //   });
+  // }
 
   void _getImage(BuildContext context, ImageSource source) {
     ImagePicker.pickImage(source: source, maxWidth: 400.0).then((File image) {
@@ -37,8 +52,11 @@ class _ImageInputState extends State<ImageInput> {
             padding: EdgeInsets.all(10.0),
             child: Column(children: [
               Text(
-                'Pick an image',
+                'Pick an Image',
                 style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              SizedBox(
+                height: 10.0,
               ),
               FlatButton(
                 textColor: Theme.of(context).primaryColor,
@@ -47,12 +65,9 @@ class _ImageInputState extends State<ImageInput> {
                   _getImage(context, ImageSource.camera);
                 },
               ),
-              SizedBox(
-                height: 10.0,
-              ),
               FlatButton(
                 textColor: Theme.of(context).primaryColor,
-                child: Text('Use Gallary'),
+                child: Text('Use Gallery'),
                 onPressed: () {
                   _getImage(context, ImageSource.gallery);
                 },
@@ -64,8 +79,8 @@ class _ImageInputState extends State<ImageInput> {
 
   @override
   Widget build(BuildContext context) {
-    final buttonColor = Theme.of(context).accentColor;
-    Widget previewImage = Text('Please select an image');
+    final buttonColor = Theme.of(context).primaryColor;
+    Widget previewImage = Text('Please select an image.');
     if (_imageFile != null) {
       previewImage = Image.file(
         _imageFile,
@@ -87,15 +102,20 @@ class _ImageInputState extends State<ImageInput> {
     return Column(
       children: <Widget>[
         OutlineButton(
-          borderSide:
-              BorderSide(color: Theme.of(context).accentColor, width: 2.0),
+          borderSide: BorderSide(
+            color: buttonColor,
+            width: 2.0,
+          ),
           onPressed: () {
             _openImagePicker(context);
           },
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              Icon(Icons.camera_alt, color: buttonColor),
+              Icon(
+                Icons.camera_alt,
+                color: buttonColor,
+              ),
               SizedBox(
                 width: 5.0,
               ),
@@ -109,7 +129,7 @@ class _ImageInputState extends State<ImageInput> {
         SizedBox(height: 10.0),
         previewImage
         // _imageFile == null
-        //     ? Text('Pleasepick an image.')
+        //     ? Text('Please pick an image.')
         //     :
       ],
     );
