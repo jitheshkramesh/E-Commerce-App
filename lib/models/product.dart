@@ -11,7 +11,8 @@ class Product {
   final bool isFavorite;
   final String userEmail;
   final String userId;
-final LocationData location;
+  final String catId;
+  final LocationData location;
 
   Product(
       {@required this.id,
@@ -23,5 +24,6 @@ final LocationData location;
       @required this.userId,
       @required this.location,
       @required this.imagePath,
+      @required this.catId,
       this.isFavorite = false});
 }

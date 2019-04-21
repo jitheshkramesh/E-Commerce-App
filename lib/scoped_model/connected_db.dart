@@ -11,17 +11,289 @@ import 'package:http_parser/http_parser.dart';
 
 import '../models/product.dart';
 import '../models/user.dart';
+import '../models/userRegister.dart';
 import '../models/auth.dart';
 import '../models/location_data.dart';
+import '../models/category.dart';
 
-mixin ConnectedProductsModel on Model {
+mixin Connected_dbModel on Model {
   List<Product> _products = [];
+  List<CategoryData> _categories = [];
   String _selProductId;
+  String _selCategoryId;
   User _authenticatedUser;
+  UserRegister _register;
   bool _isLoading = false;
 }
 
-mixin ProductsModel on ConnectedProductsModel {
+mixin CategoriesModel on Connected_dbModel {
+  Future<Map<String, dynamic>> uploadImage(File image,
+      {String imagePath}) async {
+    final mimeTypeData = lookupMimeType(image.path).split('/');
+    final imageUploadRequest = http.MultipartRequest(
+        'POST',
+        Uri.parse(
+            'https://us-central1-flutter-products-df0ff.cloudfunctions.net/storeImage'));
+    final file = await http.MultipartFile.fromPath(
+      'image',
+      image.path,
+      contentType: MediaType(
+        mimeTypeData[0],
+        mimeTypeData[1],
+      ),
+    );
+    imageUploadRequest.files.add(file);
+    if (imagePath != null) {
+      imageUploadRequest.fields['imagePath'] = Uri.encodeComponent(imagePath);
+    }
+    imageUploadRequest.headers['Authorization'] =
+        'Bearer ${_authenticatedUser.token}';
+
+    try {
+      final streamedResponse = await imageUploadRequest.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        print('Something went wrong Upload Image');
+        print(json.decode(response.body) + 'from print method');
+        return null;
+      }
+      final responseData = json.decode(response.body);
+      return responseData;
+    } catch (error) {
+      print(error);
+      return null;
+    }
+  }
+
+  Future<bool> addCategory(
+      String description, File image, bool isActive) async {
+    _isLoading = true;
+    notifyListeners();
+    final uploadData = await uploadImage(image);
+    if (uploadData == null) {
+      print('Upload faild!');
+      return false;
+    }
+
+    final Map<String, dynamic> categoryData = {
+      'CatDesc': description,
+      'CatIsActive': isActive,
+      'userEmail': _authenticatedUser.email,
+      'userId': _authenticatedUser.id,
+      'imagePath': uploadData['imagePath'],
+      'ImageUrl': uploadData['imageUrl']
+    };
+    try {
+      final http.Response response = await http.post(
+          'https://flutter-products-df0ff.firebaseio.com/Category.json?auth=${_authenticatedUser.token}',
+          body: json.encode(categoryData));
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+      final Map<String, dynamic> responseData = json.decode(response.body);
+
+      final CategoryData newCategory = CategoryData(
+          id: responseData['name'],
+          catDesc: description,
+          catIsActive: responseData['CatIsActive'] ? true : false,
+          image: uploadData['imageUrl'],
+          imagePath: uploadData['imagePath'],
+          userEmail: _authenticatedUser.email,
+          userId: _authenticatedUser.id);
+      _categories.add(newCategory);
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (error) {
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> updateCategory(
+      String description, File image, bool isActive) async {
+    _isLoading = true;
+    notifyListeners();
+    String imageUrl = selectedCategory.image;
+    String imagePath = selectedCategory.imagePath;
+    if (image != null) {
+      final uploadData = await uploadImage(image);
+      if (uploadData == null) {
+        print('Upload faild!');
+        return false;
+      }
+
+      imageUrl = uploadData['imageUrl'];
+      imagePath = uploadData['imagePath'];
+    }
+
+    final Map<String, dynamic> updateData = {
+      'CatDesc': description,
+      'CatIsActive': isActive,
+      'imageUrl': imageUrl,
+      'imagePath': imagePath,
+      'userEmail': selectedCategory.userEmail,
+      'userId': selectedCategory.userId
+    };
+    try {
+      await http.put(
+          'https://flutter-products-df0ff.firebaseio.com/Category/${selectedCategory.id}.json?auth=${_authenticatedUser.token}',
+          body: json.encode(updateData));
+
+      _isLoading = false;
+
+      final CategoryData updatedCategory = CategoryData(
+          id: selectedCategory.id,
+          catDesc: description,
+          catIsActive: isActive,
+          image: imageUrl,
+          imagePath: imagePath,
+          userEmail: selectedCategory.userEmail,
+          userId: selectedCategory.userId);
+
+      _categories[selectedCategoryIndex] = updatedCategory;
+      notifyListeners();
+      return true;
+    } catch (error) {
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<Null> fetchCategories({onlyforUser = false, clearExisting = false}) {
+    print('Category list');
+    _isLoading = true;
+    if (clearExisting) _categories = [];
+    notifyListeners();
+    return http
+        .get(
+            'https://flutter-products-df0ff.firebaseio.com/Category.json?auth=${_authenticatedUser.token}')
+        .then<Null>((http.Response response) {
+      _isLoading = false;
+      final List<CategoryData> fetchedCategoryList = [];
+      final Map<String, dynamic> _categoryData = json.decode(response.body);
+      if (_categoryData == null) {
+        _isLoading = false;
+        notifyListeners();
+        return;
+      }
+      print('Category list count ${_categoryData.length}');
+      _categoryData.forEach((String catId, dynamic _categoryData) {
+        final CategoryData categoryData = CategoryData(
+          id: catId,
+          catDesc: _categoryData['CatDesc'],
+          // catIsActive:
+          //     (bool.fromEnvironment(_categoryData['CatIsActive']) == true)
+          //         ? true
+          //         : false,
+          catIsActive: _categoryData['CatIsActive'] ? true : false,
+          image: _categoryData['ImageUrl'],
+          imagePath: _categoryData['imagePath'],
+          userEmail: _categoryData['userEmail'],
+          userId: _categoryData['userId'],
+        );
+        fetchedCategoryList.add(categoryData);
+      });
+      _categories = fetchedCategoryList.where((CategoryData category) {
+        return category.userId == _authenticatedUser.id;
+      }).toList();
+
+      print('Category list fetched count ${_categories.length}');
+      _isLoading = false;
+      notifyListeners();
+      _selProductId = null;
+    }).catchError((error) {
+      print('Category list fetched count error.');
+      _isLoading = false;
+      notifyListeners();
+      return;
+    });
+  }
+
+  void getCategories() async {
+    //Map<String, dynamic> _categoryData;
+    try {
+      final response = await http.get(
+          'https://flutter-products-df0ff.firebaseio.com/Category.json?auth=${_authenticatedUser.token}');
+      if (response.statusCode == 200) {
+        //_categories = loadCategories(response.body);
+        final List<CategoryData> fetchedCategoryList = [];
+        Map<String, dynamic> _categoryData = json.decode(response.body);
+        print('before foreach');
+        _categoryData.forEach((String catId, dynamic _categoryData) {
+          final CategoryData categoryData = CategoryData(
+              id: catId,
+              catDesc: _categoryData['CatDesc'],
+              catIsActive: _categoryData['CatIsActive'] ? true : false,
+              imagePath: _categoryData['imagePath'],
+              userEmail: _categoryData['userEmail'],
+              userId: _categoryData['userId']);
+          fetchedCategoryList.add(categoryData);
+        });
+        _categories = fetchedCategoryList.toList();
+        print('Categories success');
+
+        print('Categories length : ${_categoryData.length}');
+        //print('Categories length : ${_categories.length}');
+        // _categories = fetchedCategoryList.where((CategoryData category) {
+        //   return;
+        // }).toList();
+      } else {
+        print('Errors getting Categories.');
+      }
+    } catch (e) {
+      print('Errors catch getting Categories.');
+    }
+  }
+
+  static List<CategoryData> loadCategories(String jsonString) {
+    final parsed = json.decode(jsonString).cast<Map<String, dynamic>>();
+    return parsed
+        .map<CategoryData>((json) => CategoryData.fromJson(json))
+        .toList();
+  }
+
+  List<CategoryData> get displayedCategories {
+    return List.from(_categories.toList());
+  }
+
+  List<CategoryData> get allCategories {
+    return List.from(_categories);
+  }
+
+  int get selectedCategoryIndex {
+    return _categories.indexWhere((CategoryData category) {
+      return category.id == _selCategoryId;
+    });
+  }
+
+  String get selectedCategoryId {
+    return _selCategoryId;
+  }
+
+  CategoryData get selectedCategory {
+    if (selectedCategoryId == null) {
+      return null;
+    }
+    return _categories.firstWhere((CategoryData category) {
+      return category.id == _selCategoryId;
+    });
+  }
+
+  void selectCategory(String categoryId) {
+    _selCategoryId = categoryId;
+    if (categoryId == null) {
+      notifyListeners();
+    }
+  }
+}
+
+mixin ProductsModel on Connected_dbModel {
   bool _showFavorites = false;
 
   List<Product> get allProducts {
@@ -98,7 +370,7 @@ mixin ProductsModel on ConnectedProductsModel {
   }
 
   Future<bool> addProduct(String title, String description, File image,
-      double price, LocationData locData) async {
+      double price, LocationData locData, String catId) async {
     _isLoading = true;
     notifyListeners();
     final uploadData = await uploadImage(image);
@@ -117,7 +389,8 @@ mixin ProductsModel on ConnectedProductsModel {
       'imageUrl': uploadData['imageUrl'],
       'loc_lat': locData.latitude,
       'loc_lan': locData.longitude,
-      'loc_address': locData.address
+      'loc_address': locData.address,
+      'catId': catId
     };
     try {
       final http.Response response = await http.post(
@@ -142,7 +415,8 @@ mixin ProductsModel on ConnectedProductsModel {
           price: price,
           location: locData,
           userEmail: _authenticatedUser.email,
-          userId: _authenticatedUser.id);
+          userId: _authenticatedUser.id,
+          catId: catId);
       _products.add(newProduct);
       _isLoading = false;
       notifyListeners();
@@ -160,7 +434,7 @@ mixin ProductsModel on ConnectedProductsModel {
   }
 
   Future<bool> updateProduct(String title, String description, File image,
-      double price, LocationData locData) async {
+      double price, LocationData locData, String catId) async {
     _isLoading = true;
     notifyListeners();
     String imageUrl = selectedProduct.image;
@@ -186,7 +460,8 @@ mixin ProductsModel on ConnectedProductsModel {
       'loc_lan': locData.longitude,
       'loc_address': locData.address,
       'userEmail': selectedProduct.userEmail,
-      'userId': selectedProduct.userId
+      'userId': selectedProduct.userId,
+      'catId': catId
     };
     try {
       await http.put(
@@ -204,7 +479,8 @@ mixin ProductsModel on ConnectedProductsModel {
           price: price,
           location: locData,
           userEmail: selectedProduct.userEmail,
-          userId: selectedProduct.userId);
+          userId: selectedProduct.userId,
+          catId: catId);
 
       _products[selectedProductIndex] = updatedProduct;
       notifyListeners();
@@ -237,6 +513,7 @@ mixin ProductsModel on ConnectedProductsModel {
   }
 
   Future<Null> fetchProducts({onlyforUser = false, clearExisting = false}) {
+    print('Product list');
     _isLoading = true;
     if (clearExisting) _products = [];
     notifyListeners();
@@ -252,6 +529,7 @@ mixin ProductsModel on ConnectedProductsModel {
         notifyListeners();
         return;
       }
+      print('Product list count ${productListData.length}');
       productListData.forEach((String productId, dynamic productData) {
         final Product product = Product(
             id: productId,
@@ -260,6 +538,7 @@ mixin ProductsModel on ConnectedProductsModel {
             image: productData['imageUrl'],
             imagePath: productData['imagePath'],
             price: productData['price'],
+            catId: productData['CatId'],
             location: LocationData(
                 address: productData['loc_address'],
                 latitude: productData['loc_lat'],
@@ -274,11 +553,15 @@ mixin ProductsModel on ConnectedProductsModel {
       });
       _products = fetchedProductList.where((Product product) {
         return product.userId == _authenticatedUser.id;
+        //return product.userId == product.userId;
       }).toList();
+
+      print('Product list fetched count ${_products.length}');
       _isLoading = false;
       notifyListeners();
       _selProductId = null;
     }).catchError((error) {
+      print('Product list fetched count error.');
       _isLoading = false;
       notifyListeners();
       return;
@@ -304,7 +587,8 @@ mixin ProductsModel on ConnectedProductsModel {
         location: selectedProduct.location,
         userEmail: selectedProduct.userEmail,
         userId: selectedProduct.userId,
-        isFavorite: newFavoriteStatus);
+        isFavorite: newFavoriteStatus,
+        catId: selectedProduct.catId);
     _products[toggledProductIndex] = updateProduct;
     notifyListeners();
     http.Response response;
@@ -325,7 +609,8 @@ mixin ProductsModel on ConnectedProductsModel {
             location: selectedProduct.location,
             userEmail: selectedProduct.userEmail,
             userId: selectedProduct.userId,
-            isFavorite: !newFavoriteStatus);
+            isFavorite: !newFavoriteStatus,
+            catId: selectedProduct.catId);
         _products[selectedProductIndex] = updateProduct;
         notifyListeners();
       }
@@ -340,14 +625,15 @@ mixin ProductsModel on ConnectedProductsModel {
           title: selectedProduct.title,
           description: selectedProduct.description,
           price: selectedProduct.price,
-          // image: selectedProduct.image,
-          // imagePath: selectedProduct.imagePath,
-          image: '',
-          imagePath: '',
+          image: selectedProduct.image,
+          imagePath: selectedProduct.imagePath,
+          // image: '',
+          // imagePath: '',
           location: selectedProduct.location,
           userEmail: selectedProduct.userEmail,
           userId: selectedProduct.userId,
-          isFavorite: !newFavoriteStatus);
+          isFavorite: !newFavoriteStatus,
+          catId: selectedProduct.catId);
       _products[selectedProductIndex] = updateProduct;
       notifyListeners();
     }
@@ -367,13 +653,12 @@ mixin ProductsModel on ConnectedProductsModel {
   }
 }
 
-mixin UserModel on ConnectedProductsModel {
+mixin UserModel on Connected_dbModel {
   Timer _authTimer;
   PublishSubject<bool> _userSubject = PublishSubject();
 
   User get user {
     print('Is authenticated from connected products');
-    print(_authenticatedUser.token);
     return _authenticatedUser;
   }
 
@@ -408,21 +693,43 @@ mixin UserModel on ConnectedProductsModel {
     final Map<String, dynamic> responseData = json.decode(response.body);
     bool hasError = true;
     String message = 'Something went wrong';
-    print('Something went wrong');
     if (responseData.containsKey('idToken')) {
       hasError = false;
       message = 'Authentication succeeded';
       print(message);
+
+      //print('User registration starting...');
+      //userRegister(responseData['localId'], responseData['idToken'], email);
+      //print('user name is ${_authenticatedUser.register.firstName}');
+
       _authenticatedUser = User(
           id: responseData['localId'],
           email: email,
           token: responseData['idToken']);
+
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
       setAuthTimeout(int.parse(responseData['expiresIn']));
       _userSubject.add(true);
+      //UserRegisterModel userRegisterModel;
+      _userRegisterData(_authenticatedUser.id);
+      print('User Register success');
+
+      final String firstName = prefs.getString('firstName');
+      final String secondName = prefs.getString('secondName');
+      final String contactNo = prefs.getString('contactNo');
+      final String dob = prefs.getString('dob');
+      final String imagePath = prefs.getString('imagePath');
+      _register = UserRegister(
+          firstName: firstName,
+          secondName: secondName,
+          contactNo: contactNo,
+          dob: dob,
+          imagePath: imagePath);
+
       final DateTime now = DateTime.now();
       final DateTime expiryTime =
           now.add(Duration(seconds: int.parse(responseData['expiresIn'])));
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
+
       prefs.setString('token', responseData['idToken']);
       prefs.setString('userEmail', email);
       prefs.setString('userId', responseData['localId']);
@@ -434,9 +741,44 @@ mixin UserModel on ConnectedProductsModel {
     } else if (responseData['error']['message'] == 'INVALID_PASSWORD') {
       message = 'The password is invalid';
     }
+
     _isLoading = false;
     notifyListeners();
     return {'success': !hasError, 'message': message};
+  }
+
+  void _userRegisterData(String userId) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    try {
+      await http
+          .get(
+              'https://flutter-products-df0ff.firebaseio.com/UserRegister/$userId.json?auth=${_authenticatedUser.token}')
+          .then<Null>((http.Response response) {
+        final Map<String, dynamic> responseData = json.decode(response.body);
+        if (responseData.containsKey('firstName') != null) {
+          _register = UserRegister(
+              firstName: responseData['firstName'],
+              secondName: responseData['secondName'],
+              contactNo: responseData['contactNo'],
+              dob: responseData['dob'],
+              imagePath: responseData['imagePath']);
+
+          prefs.setString('firstName', responseData['firstName']);
+          prefs.setString('secondName', responseData['secondName']);
+          prefs.setString('contactNo', responseData['contactNo']);
+          prefs.setString('dob', responseData['dob']);
+          prefs.setString('imagePath', responseData['imagePath']);
+        }
+      });
+    } catch (error) {
+      print('User Register error cache_userRegisterData');
+      _register = UserRegister(
+          firstName: 'FirstName',
+          secondName: 'secondName',
+          contactNo: 'contactNo',
+          dob: 'dob',
+          imagePath: 'imagePath');
+    }
   }
 
   void autoAuthenticate() async {
@@ -448,6 +790,7 @@ mixin UserModel on ConnectedProductsModel {
       final parsedExpiryTime = DateTime.parse(expiryTimeString);
       if (parsedExpiryTime.isBefore(now)) {
         _authenticatedUser = null;
+        _register = null;
         notifyListeners();
         return;
       }
@@ -455,6 +798,18 @@ mixin UserModel on ConnectedProductsModel {
       final String userId = prefs.getString('userId');
       final tokenLifespan = parsedExpiryTime.difference(now).inSeconds;
       _authenticatedUser = User(id: userId, email: userEmail, token: token);
+
+      final String firstName = prefs.getString('firstName');
+      final String secondName = prefs.getString('secondName');
+      final String contactNo = prefs.getString('contactNo');
+      final String dob = prefs.getString('dob');
+      final String imagePath = prefs.getString('imagePath');
+      _register = UserRegister(
+          firstName: firstName,
+          secondName: secondName,
+          contactNo: contactNo,
+          dob: dob,
+          imagePath: imagePath);
       _userSubject.add(true);
       setAuthTimeout(tokenLifespan);
       notifyListeners();
@@ -463,6 +818,7 @@ mixin UserModel on ConnectedProductsModel {
 
   void logout() async {
     _authenticatedUser = null;
+    _register = null;
     _authTimer.cancel();
     _userSubject.add(false);
     _selProductId = null;
@@ -480,7 +836,13 @@ mixin UserModel on ConnectedProductsModel {
   }
 }
 
-mixin UtilityModel on ConnectedProductsModel {
+mixin UserRegisterModel on Connected_dbModel {
+  UserRegister get userRegister {
+    return _register;
+  }
+}
+
+mixin UtilityModel on Connected_dbModel {
   bool get isLoading {
     return _isLoading;
   }

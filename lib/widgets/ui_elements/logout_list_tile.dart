@@ -4,7 +4,7 @@ import 'package:scoped_model/scoped_model.dart';
 import '../../scoped_model/main.dart';
 
 class LogoutListTile extends StatelessWidget {
-  @override
+    @override
   Widget build(BuildContext context) {
     return ScopedModelDescendant(
       builder: (BuildContext context, Widget child, MainModel model) {

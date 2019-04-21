@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:autocomplete_textfield/autocomplete_textfield.dart';
 
 import '../widgets/helpers/ensure_visible.dart';
 import '../widgets/form_inputs/location.dart';
@@ -10,8 +11,12 @@ import '../widgets/ui_elements/adaptive_progress_indicator.dart';
 import '../models/product.dart';
 import '../scoped_model/main.dart';
 import '../models/location_data.dart';
+import '../models/category.dart';
 
 class ProductEditPage extends StatefulWidget {
+  final MainModel model;
+
+  ProductEditPage(this.model);
   @override
   State<StatefulWidget> createState() {
     return _ProductEditPageState();
@@ -19,20 +24,101 @@ class ProductEditPage extends StatefulWidget {
 }
 
 class _ProductEditPageState extends State<ProductEditPage> {
+  bool _isLoading = true;
+  AutoCompleteTextField searchCategoryTextField;
+  GlobalKey<AutoCompleteTextFieldState<CategoryData>> catKey = new GlobalKey();
+
+  @override
+  void initState() {
+    widget.model.getCategories();
+    _categories = widget.model.allCategories;
+    _isLoading = false;
+    print('Categories product Edit page length : ${_categories.length}');
+    super.initState();
+  }
+
   final Map<String, dynamic> _formData = {
     'title': null,
     'description': null,
     'price': null,
     'image': null,
-    'location': null
+    'location': null,
+    'catId': null
   };
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final _titleFocusNode = FocusNode();
   final _descriptionFocusNode = FocusNode();
   final _priceFocusNode = FocusNode();
+  final _categoryFocusNode = FocusNode();
   final _titleTextEditController = TextEditingController();
   final _descriptionTextController = TextEditingController();
   final _priceTextController = TextEditingController();
+  final _categoryTextEditController = TextEditingController();
+  List<CategoryData> _categories = new List<CategoryData>();
+
+  Widget _buildCategoryTextField() {
+    // if (catId == null && _categoryTextEditController.text.trim() == '') {
+    //   _categoryTextEditController.text = '';
+    // } else if (catId != null && _categoryTextEditController.text.trim() == '') {
+    //   _categoryTextEditController.text = catId.toString();
+    // } else if (catId != null && _categoryTextEditController.text.trim() != '') {
+    //   _categoryTextEditController.text = _categoryTextEditController.text;
+    // } else if (catId == null && _categoryTextEditController.text.trim() != '') {
+    //   _categoryTextEditController.text = _categoryTextEditController.text;
+    // } else {
+    //   _categoryTextEditController.text = '';
+    // }
+
+    print('Categories product Edit Widget page length : ${_categories.length}');
+
+    return EnsureVisibleWhenFocused(
+      focusNode: _categoryFocusNode,
+      child: searchCategoryTextField = AutoCompleteTextField<CategoryData>(
+        key: catKey,
+        clearOnSubmit: false,
+        suggestions: _categories,
+        style: TextStyle(color: Colors.black, fontSize: 16.0),
+        decoration: InputDecoration(
+          contentPadding: EdgeInsets.fromLTRB(10.0, 30.0, 10.0, 20.0),
+          hintText: "Search Category",
+          hintStyle: TextStyle(color: Colors.black),
+        ),
+        itemFilter: (item, query) {
+          return item.catDesc.toLowerCase().contains(query.toLowerCase());
+        },
+        itemSorter: (a, b) {
+          return a.catDesc.compareTo(b.catDesc);
+        },
+        itemSubmitted: (item) {
+          setState(() {
+            searchCategoryTextField.textField.controller.text = item.catDesc;
+          });
+        },
+        itemBuilder: (context, item) {
+          // ui for autocomplete row
+          return row(item);
+        },
+      ),
+    );
+  }
+
+  Widget row(CategoryData category) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: <Widget>[
+        Text(
+          category.catDesc,
+          style: TextStyle(fontSize: 16.0),
+        ),
+        SizedBox(
+          width: 10.0,
+        ),
+        Text(
+          category.catDesc,
+        )
+      ],
+    );
+  }
 
   Widget _buildTitleTextField(Product product) {
     if (product == null && _titleTextEditController.text.trim() == '') {
@@ -159,7 +245,11 @@ class _ProductEditPageState extends State<ProductEditPage> {
               SizedBox(
                 height: 10.0,
               ),
+              _isLoading
+                  ? CircularProgressIndicator()
+                  : _buildCategoryTextField(),
               ImageInput(_setImage, product),
+
               SizedBox(
                 height: 10.0,
               ),
@@ -202,7 +292,8 @@ class _ProductEditPageState extends State<ProductEditPage> {
               _formData['image'],
               double.parse(
                   _priceTextController.text.replaceFirst(RegExp(r','), '.')),
-              _formData['location'])
+              _formData['location'],
+              _categoryTextEditController.text)
           .then((bool success) {
         if (success) {
           Navigator.pushReplacementNamed(context, '/products')
@@ -231,6 +322,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
         _formData['image'],
         double.parse(_priceTextController.text.replaceFirst(RegExp(r','), '.')),
         _formData['location'],
+        _categoryTextEditController.text,
       ).then((_) => Navigator.pushReplacementNamed(context, '/products')
           .then((_) => setSelectedProduct(null)));
     }
@@ -247,8 +339,9 @@ class _ProductEditPageState extends State<ProductEditPage> {
             : Scaffold(
                 appBar: AppBar(
                   title: Text('Edit Product'),
-                  elevation:
-                  Theme.of(context).platform == TargetPlatform.iOS ? 0.0 : 4.0,
+                  elevation: Theme.of(context).platform == TargetPlatform.iOS
+                      ? 0.0
+                      : 4.0,
                 ),
                 body: pageContent,
               );

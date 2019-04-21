@@ -3,14 +3,24 @@ import 'package:flutter/material.dart';
 import 'package:map_view/map_view.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:flutter/services.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 import './pages/products_admin.dart';
 import './pages/products.dart';
 import './pages/product.dart';
 import './pages/auth.dart';
+import './pages/wished_list.dart';
+import './pages/categories.dart';
+import './pages/category.dart';
+import './pages/category_admin.dart';
+
 import './scoped_model/main.dart';
+
 import './models/product.dart';
+import './models/category.dart';
+
 import './widgets/helpers/custome_route.dart';
+
 import './shared/global_config.dart';
 import './shared/adaptive_theme.dart';
 //import 'package:flutter/rendering.dart';
@@ -35,6 +45,7 @@ class _MyAppState extends State<MyApp> {
   final MainModel _model = MainModel();
   final _platformChannel = MethodChannel('E-CommerceApp.com/battery');
   bool _isAuthenticated = false;
+  final FirebaseMessaging _messaging = FirebaseMessaging();
 
   Future<Null> _getBatteryLevel() async {
     String batteryLevel;
@@ -58,6 +69,10 @@ class _MyAppState extends State<MyApp> {
     });
     //_getBatteryLevel();
     super.initState();
+
+    _messaging.getToken().then((token) {
+      print('Message token : $token');
+    });
   }
 
   @override
@@ -80,6 +95,12 @@ class _MyAppState extends State<MyApp> {
           //'/products': (BuildContext context) => ProductsPage(_model),
           '/admin': (BuildContext context) =>
               !_isAuthenticated ? AuthPage() : ProductsAdminPage(_model),
+          '/wishedList': (BuildContext context) =>
+              !_isAuthenticated ? AuthPage() : WishedListPage(_model),
+          '/category': (BuildContext context) =>
+              !_isAuthenticated ? AuthPage() : CategoriesPage(_model),
+          '/catadmin': (BuildContext context) =>
+              !_isAuthenticated ? AuthPage() : CategoryAdminPage(_model),
         },
         onGenerateRoute: (RouteSettings settings) {
           if (!_isAuthenticated) {
@@ -100,6 +121,17 @@ class _MyAppState extends State<MyApp> {
             return CustomeRoute<bool>(
               builder: (BuildContext context) =>
                   !_isAuthenticated ? AuthPage() : ProductPage(product),
+            );
+          }
+          if (pathElements[1] == 'category') {
+            final String catId = pathElements[2];
+            final CategoryData category =
+                _model.allCategories.firstWhere((CategoryData category) {
+              return category.id == catId;
+            });
+            return CustomeRoute<bool>(
+              builder: (BuildContext context) =>
+                  !_isAuthenticated ? AuthPage() : CategoryPage(category),
             );
           }
           return null;

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import './product_edit.dart';
-import './product_list.dart';
+import './category_edit.dart';
+import './category_list.dart';
 import '../scoped_model/main.dart';
 import '../widgets/ui_elements/drawer_list.dart';
 
-class ProductsAdminPage extends StatelessWidget {
+class CategoryAdminPage extends StatelessWidget {
   final MainModel model;
 
-  ProductsAdminPage(this.model);
+  CategoryAdminPage(this.model);
 
   Widget _buildSideDrawer(BuildContext context) {
     print('Image path is :');
@@ -22,23 +22,23 @@ class ProductsAdminPage extends StatelessWidget {
       child: Scaffold(
           drawer: _buildSideDrawer(context),
           appBar: AppBar(
-              title: Text('Manage Products'),
+              title: Text('Manage Category'),
               elevation:
                   Theme.of(context).platform == TargetPlatform.iOS ? 0.0 : 4.0,
               bottom: TabBar(
                 tabs: <Widget>[
                   Tab(
                     icon: Icon(Icons.create),
-                    text: 'Create Product',
+                    text: 'Create Category',
                   ),
                   Tab(
                     icon: Icon(Icons.list),
-                    text: 'My Products',
+                    text: 'My Categories',
                   )
                 ],
               )),
           body: TabBarView(
-            children: <Widget>[ProductEditPage(model), ProductListPage(model)],
+            children: <Widget>[CategoryEditPage(model), CategoryListPage(model)],
           )),
     );
   }

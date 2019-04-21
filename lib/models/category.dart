@@ -1,12 +1,30 @@
 class CategoryData {
-  int catId;
+  final String id;
+  //String catId;
   String catDesc;
-  String catIsActive;
-  CategoryData({this.catId, this.catDesc, this.catIsActive});
+  bool catIsActive;
+  String imagePath;
+  final String image;
+  final String userEmail;
+  final String userId;
+  CategoryData(
+      {
+      //this.catId,
+      this.catDesc,
+      this.catIsActive,
+      this.imagePath,
+      this.image,
+      this.userEmail,
+      this.userId,
+      this.id});
   factory CategoryData.fromJson(Map<String, dynamic> parsedJson) {
     return CategoryData(
-        catId: parsedJson["CatId"],
+        //catId: parsedJson["CatId"],
         catDesc: parsedJson["CatDesc"],
-        catIsActive: parsedJson["CatIsActive"]);
+        catIsActive: parsedJson["CatIsActive"] ? true : false,
+        imagePath: parsedJson["imagePath"],
+        image: parsedJson["ImageUrl"],
+        userEmail: parsedJson["UserEmail"],
+        userId: parsedJson["UserId"]);
   }
 }

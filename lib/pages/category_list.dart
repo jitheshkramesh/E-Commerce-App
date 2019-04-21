@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
-import '../pages/product_edit.dart';
+import '../pages/category_edit.dart';
 import '../scoped_model/main.dart';
 
-class ProductListPage extends StatefulWidget {
+class CategoryListPage extends StatefulWidget {
   final MainModel model;
 
-  ProductListPage(this.model);
+  CategoryListPage(this.model);
 
   @override
   State<StatefulWidget> createState() {
-    return _ProductListPageState();
+    return _CategoryistPageState();
   }
 }
 
-class _ProductListPageState extends State<ProductListPage> {
+class _CategoryistPageState extends State<CategoryListPage> {
   @override
   initState() {
-    widget.model.fetchProducts(onlyforUser: true, clearExisting: true);
+    widget.model.fetchCategories(onlyforUser: true, clearExisting: true);
     super.initState();
   }
 
@@ -25,15 +25,15 @@ class _ProductListPageState extends State<ProductListPage> {
     return IconButton(
       icon: Icon(Icons.edit),
       onPressed: () {
-        model.selectProduct(model.allProducts[index].id);
+        model.selectCategory(model.allCategories[index].id);
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (BuildContext context) {
-              return ProductEditPage(model);
+              return CategoryEditPage(model);
             },
           ),
         ).then((_) {
-          model.selectProduct(null);
+          model.selectCategory(null);
         });
       },
     );
@@ -46,11 +46,11 @@ class _ProductListPageState extends State<ProductListPage> {
       return ListView.builder(
         itemBuilder: (BuildContext context, int index) {
           return Dismissible(
-            key: Key(model.allProducts[index].title),
+            key: Key(model.allCategories[index].catDesc),
             onDismissed: (DismissDirection direction) {
               if (direction == DismissDirection.endToStart) {
-                model.selectProduct(model.allProducts[index].id);
-                model.deleteProduct();
+                model.selectCategory(model.allCategories[index].id);
+                //model.deleteProduct();
                 Scaffold.of(context).showSnackBar(
                     new SnackBar(content: new Text('Item dismissed')));
                 print('Swiped end to start');
@@ -66,11 +66,11 @@ class _ProductListPageState extends State<ProductListPage> {
                 ListTile(
                   leading: CircleAvatar(
                     backgroundImage:
-                        NetworkImage(model.allProducts[index].image),
+                        NetworkImage(model.allCategories[index].image),
                   ),
-                  title: Text(model.allProducts[index].title),
-                  subtitle:
-                      Text('\$${model.allProducts[index].price.toString()}'),
+                  title: Text(model.allCategories[index].catDesc),
+                  // subtitle:
+                  //     Text('${model.allCategories[index].id.toString()}'),
                   trailing: _buildEditButton(context, index, model),
                 ),
                 Divider()
@@ -78,7 +78,7 @@ class _ProductListPageState extends State<ProductListPage> {
             ),
           );
         },
-        itemCount: model.allProducts.length,
+        itemCount: model.allCategories.length,
       );
     });
   }

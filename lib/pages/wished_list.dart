@@ -4,17 +4,17 @@ import '../widgets/products/products.dart';
 import '../widgets/ui_elements/drawer_list.dart';
 import '../scoped_model/main.dart';
 
-class ProductsPage extends StatefulWidget {
+class WishedListPage extends StatefulWidget {
   final MainModel model;
-  ProductsPage(this.model);
+  WishedListPage(this.model);
 
   @override
   State<StatefulWidget> createState() {
-    return _ProductStatePage();
+    return _WishedListStatePage();
   }
 }
 
-class _ProductStatePage extends State<ProductsPage> {
+class _WishedListStatePage extends State<WishedListPage> {
   String imagePath;
 
   @override
@@ -23,11 +23,12 @@ class _ProductStatePage extends State<ProductsPage> {
     print('Image path is :');
     print(widget.model.userRegister.imagePath);
     imagePath = widget.model.userRegister.imagePath.toString();
+    widget.model.toggleDisplayMode();
     super.initState();
   }
 
   Widget _buildSideDrawer(BuildContext context) {
-    return  DrawerList(widget.model);
+    return DrawerList(widget.model);
   }
 
   Widget _buildProductList() {
@@ -49,7 +50,7 @@ class _ProductStatePage extends State<ProductsPage> {
     return Scaffold(
       drawer: _buildSideDrawer(context),
       appBar: AppBar(
-        title: Text('E-Commerce'),
+        title: Text('Wished List'),
         elevation: Theme.of(context).platform == TargetPlatform.iOS ? 0.0 : 4.0,
         actions: <Widget>[
           ScopedModelDescendant<MainModel>(

@@ -35,6 +35,8 @@ dependencies:
   #image_picker: ^0.5.0+9
   mime: ^0.9.6+2
   url_launcher: ^5.0.2
+  autocomplete_textfield: ^1.6.4  
+  firebase_messaging:
     
 dev_dependencies:
   flutter_test:

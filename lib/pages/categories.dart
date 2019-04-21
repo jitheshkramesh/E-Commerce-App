@@ -1,28 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
-import '../widgets/products/products.dart';
+import '../widgets/products/categories.dart';
 import '../widgets/ui_elements/drawer_list.dart';
 import '../scoped_model/main.dart';
 
-class ProductsPage extends StatefulWidget {
+class CategoriesPage extends StatefulWidget {
   final MainModel model;
-  ProductsPage(this.model);
+  CategoriesPage(this.model);
 
   @override
   State<StatefulWidget> createState() {
-    return _ProductStatePage();
+    return _CategoryStatePage();
   }
 }
 
-class _ProductStatePage extends State<ProductsPage> {
-  String imagePath;
+class _CategoryStatePage extends State<CategoriesPage> {
 
   @override
   initState() {
-    widget.model.fetchProducts();
-    print('Image path is :');
-    print(widget.model.userRegister.imagePath);
-    imagePath = widget.model.userRegister.imagePath.toString();
+    //widget.model.fetchCategories();
+    widget.model.fetchCategories(onlyforUser: true, clearExisting: true);
     super.initState();
   }
 
@@ -30,12 +27,12 @@ class _ProductStatePage extends State<ProductsPage> {
     return  DrawerList(widget.model);
   }
 
-  Widget _buildProductList() {
+  Widget _buildCategoryList() {
     return ScopedModelDescendant(
       builder: (BuildContext context, Widget child, MainModel model) {
-        Widget content = Center(child: Text('No Products Found!'));
+        Widget content = Center(child: Text('No Categories Found!'));
         if (model.displayedProducts.length > 0 && !model.isLoading) {
-          content = Products();
+          content = Categories();
         } else if (model.isLoading) {
           content = Center(child: CircularProgressIndicator());
         }
@@ -49,7 +46,7 @@ class _ProductStatePage extends State<ProductsPage> {
     return Scaffold(
       drawer: _buildSideDrawer(context),
       appBar: AppBar(
-        title: Text('E-Commerce'),
+        title: Text('Category'),
         elevation: Theme.of(context).platform == TargetPlatform.iOS ? 0.0 : 4.0,
         actions: <Widget>[
           ScopedModelDescendant<MainModel>(
@@ -66,7 +63,7 @@ class _ProductStatePage extends State<ProductsPage> {
           )
         ],
       ),
-      body: _buildProductList(),
+      body: _buildCategoryList(),
     );
   }
 }

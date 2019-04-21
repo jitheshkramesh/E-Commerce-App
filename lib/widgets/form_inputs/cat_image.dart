@@ -4,13 +4,13 @@ import 'package:flutter/material.dart';
 
 import 'package:image_picker/image_picker.dart';
 
-import '../../models/product.dart';
+import '../../models/category.dart';
 
 class ImageInput extends StatefulWidget {
   final Function setImage;
-  final Product product;
+  final CategoryData categoryData;
 
-  ImageInput(this.setImage,this.product);
+  ImageInput(this.setImage, this.categoryData);
 
   @override
   State<StatefulWidget> createState() {
@@ -19,19 +19,7 @@ class ImageInput extends StatefulWidget {
 }
 
 class _ImageInputState extends State<ImageInput> {
-  File _imageFile;
-
-  // Future getImage(bool isCamera) async {
-  //   File imageFile;
-  //   if (isCamera) {
-  //     imageFile = await ImagePicker.pickImage(source: ImageSource.camera);
-  //   } else {
-  //     imageFile = await ImagePicker.pickImage(source: ImageSource.gallery);
-  //   }
-  //   setState(() {
-  //     _imageFile = imageFile;
-  //   });
-  // }
+  File _imageFile; 
 
   void _getImage(BuildContext context, ImageSource source) {
     ImagePicker.pickImage(source: source, maxWidth: 400.0).then((File image) {
@@ -89,9 +77,9 @@ class _ImageInputState extends State<ImageInput> {
         width: MediaQuery.of(context).size.width,
         alignment: Alignment.topCenter,
       );
-    } else if (widget.product != null) {
+    } else if (widget.categoryData != null) {
       previewImage = Image.network(
-        widget.product.image,
+        widget.categoryData.image,
         fit: BoxFit.cover,
         height: 300.0,
         width: MediaQuery.of(context).size.width,
