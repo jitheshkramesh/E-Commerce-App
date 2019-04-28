@@ -37,7 +37,8 @@ dependencies:
   url_launcher: ^5.0.2
   autocomplete_textfield: ^1.6.4  
   firebase_messaging:
-    
+  carousel_pro: ^0.0.13
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -68,6 +69,13 @@ flutter:
   assets:
     - assets/food.jpg
     - assets/background.jpg
+    - assets/bannerImages/1.jpg
+    - assets/bannerImages/2.jpg
+    - assets/bannerImages/3.png
+    - assets/bannerImages/4.jpg
+    - assets/bannerImages/5.jpg
+    - assets/bannerImages/6.jpg
+    - assets/bannerImages/7.jpg
   #  - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

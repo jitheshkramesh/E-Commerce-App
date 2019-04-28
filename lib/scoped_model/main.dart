@@ -8,4 +8,5 @@ class MainModel extends Model
         UserRegisterModel,
         ProductsModel,
         UtilityModel,
-        CategoriesModel {}
+        CategoriesModel,
+        CartModel {}

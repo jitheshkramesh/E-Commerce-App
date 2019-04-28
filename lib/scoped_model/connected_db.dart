@@ -15,11 +15,14 @@ import '../models/userRegister.dart';
 import '../models/auth.dart';
 import '../models/location_data.dart';
 import '../models/category.dart';
+import '../models/cart_items.dart';
 
 mixin Connected_dbModel on Model {
   List<Product> _products = [];
+  List<CartItems> _cartitems = [];
   List<CategoryData> _categories = [];
   String _selProductId;
+  String _selCartId;
   String _selCategoryId;
   User _authenticatedUser;
   UserRegister _register;
@@ -295,8 +298,17 @@ mixin CategoriesModel on Connected_dbModel {
 
 mixin ProductsModel on Connected_dbModel {
   bool _showFavorites = false;
+  bool _showCarts = false;
 
   List<Product> get allProducts {
+    return List.from(_products);
+  }
+
+  List<Product> get displayedCartProducts {
+    if (_showCarts) {
+      return List.from(
+          _products.where((Product product) => product.isCart).toList());
+    }
     return List.from(_products);
   }
 
@@ -512,15 +524,18 @@ mixin ProductsModel on Connected_dbModel {
     });
   }
 
-  Future<Null> fetchProducts({onlyforUser = false, clearExisting = false}) {
+  Future<Null> fetchProducts(
+      {onlyforUser = false, clearExisting = false, catfilter}) {
     print('Product list');
     _isLoading = true;
     if (clearExisting) _products = [];
     notifyListeners();
-    return http
-        .get(
-            'https://flutter-products-df0ff.firebaseio.com/products.json?auth=${_authenticatedUser.token}')
-        .then<Null>((http.Response response) {
+    String query;
+    query =
+        'https://flutter-products-df0ff.firebaseio.com/products.json?auth=${_authenticatedUser.token}';
+
+    print('Query is $query');
+    return http.get(query).then<Null>((http.Response response) {
       _isLoading = false;
       final List<Product> fetchedProductList = [];
       final Map<String, dynamic> productListData = json.decode(response.body);
@@ -538,7 +553,7 @@ mixin ProductsModel on Connected_dbModel {
             image: productData['imageUrl'],
             imagePath: productData['imagePath'],
             price: productData['price'],
-            catId: productData['CatId'],
+            catId: productData['catId'],
             location: LocationData(
                 address: productData['loc_address'],
                 latitude: productData['loc_lat'],
@@ -552,7 +567,14 @@ mixin ProductsModel on Connected_dbModel {
         fetchedProductList.add(product);
       });
       _products = fetchedProductList.where((Product product) {
-        return product.userId == _authenticatedUser.id;
+        if (catfilter == null) {
+          return product.userId == _authenticatedUser.id;
+        } else {
+          print(
+              'Product list fetched count ${_products.length} cat id is ${catfilter.toString()}');
+          return (product.userId == _authenticatedUser.id) &&
+              (product.catId == catfilter.toString());
+        }
         //return product.userId == product.userId;
       }).toList();
 
@@ -572,6 +594,10 @@ mixin ProductsModel on Connected_dbModel {
     final bool isCurrentlyFavorite =
         selectedProduct.isFavorite == null ? false : selectedProduct.isFavorite;
     final bool newFavoriteStatus = !isCurrentlyFavorite;
+    final bool isCurrentlyCart =
+        selectedProduct.isCart == null ? false : selectedProduct.isCart;
+    final bool newCartStatus = !isCurrentlyCart;
+
     final int toggledProductIndex = _products.indexWhere((Product product) {
       return product.id == selectedProduct.id;
     });
@@ -588,6 +614,7 @@ mixin ProductsModel on Connected_dbModel {
         userEmail: selectedProduct.userEmail,
         userId: selectedProduct.userId,
         isFavorite: newFavoriteStatus,
+        isCart: newCartStatus,
         catId: selectedProduct.catId);
     _products[toggledProductIndex] = updateProduct;
     notifyListeners();
@@ -610,6 +637,7 @@ mixin ProductsModel on Connected_dbModel {
             userEmail: selectedProduct.userEmail,
             userId: selectedProduct.userId,
             isFavorite: !newFavoriteStatus,
+            isCart: newCartStatus,
             catId: selectedProduct.catId);
         _products[selectedProductIndex] = updateProduct;
         notifyListeners();
@@ -633,11 +661,85 @@ mixin ProductsModel on Connected_dbModel {
           userEmail: selectedProduct.userEmail,
           userId: selectedProduct.userId,
           isFavorite: !newFavoriteStatus,
+          isCart: newCartStatus,
           catId: selectedProduct.catId);
       _products[selectedProductIndex] = updateProduct;
       notifyListeners();
     }
     //_selProductId = null;
+  }
+
+  void toggleProductCartStatus() async {
+    final bool isCurrentlyFavorite =
+        selectedProduct.isFavorite == null ? false : selectedProduct.isFavorite;
+    final bool newFavoriteStatus = !isCurrentlyFavorite;
+    final bool isCurrentlyCart =
+        selectedProduct.isCart == null ? false : selectedProduct.isCart;
+    final bool newCartStatus = !isCurrentlyCart;
+    final int toggledProductIndex = _products.indexWhere((Product product) {
+      return product.id == selectedProduct.id;
+    });
+    print('Cart products add more reached.');
+    final Product updateProduct = Product(
+        id: selectedProduct.id,
+        title: selectedProduct.title,
+        description: selectedProduct.description,
+        price: selectedProduct.price,
+        image: selectedProduct.image,
+        imagePath: selectedProduct.imagePath,
+        location: selectedProduct.location,
+        userEmail: selectedProduct.userEmail,
+        userId: selectedProduct.userId,
+        isFavorite: newFavoriteStatus,
+        isCart: newCartStatus,
+        catId: selectedProduct.catId);
+    _products[toggledProductIndex] = updateProduct;
+    notifyListeners();
+    http.Response response;
+    if (newFavoriteStatus) {
+      response = await http.put(
+          'https://flutter-products-df0ff.firebaseio.com/products/${selectedProduct.id}/cartlistUsers/${_authenticatedUser.id}.json?auth=${_authenticatedUser.token}',
+          body: json.encode(true));
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        final Product updateProduct = Product(
+            id: selectedProduct.id,
+            title: selectedProduct.title,
+            description: selectedProduct.description,
+            price: selectedProduct.price,
+            image: selectedProduct.image,
+            imagePath: selectedProduct.imagePath,
+            location: selectedProduct.location,
+            userEmail: selectedProduct.userEmail,
+            userId: selectedProduct.userId,
+            isFavorite: !newFavoriteStatus,
+            isCart: !newCartStatus,
+            catId: selectedProduct.catId);
+        _products[selectedProductIndex] = updateProduct;
+        notifyListeners();
+      }
+    } else {
+      print('Cart products delete reached.');
+      response = await http.delete(
+          'https://flutter-products-df0ff.firebaseio.com/products/${selectedProduct.id}/cartlistUsers/${_authenticatedUser.id}.json?auth=${_authenticatedUser.token}');
+    }
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      final Product updateProduct = Product(
+          id: selectedProduct.id,
+          title: selectedProduct.title,
+          description: selectedProduct.description,
+          price: selectedProduct.price,
+          image: selectedProduct.image,
+          imagePath: selectedProduct.imagePath,
+          location: selectedProduct.location,
+          userEmail: selectedProduct.userEmail,
+          userId: selectedProduct.userId,
+          isFavorite: !newFavoriteStatus,
+          isCart: !newCartStatus,
+          catId: selectedProduct.catId);
+      _products[selectedProductIndex] = updateProduct;
+      notifyListeners();
+    }
   }
 
   void selectProduct(String productId) {
@@ -652,6 +754,290 @@ mixin ProductsModel on Connected_dbModel {
     notifyListeners();
   }
 }
+
+mixin CartModel on Connected_dbModel {
+  bool _isPaid = false;
+  bool _isDelivered = false;
+
+  List<CartItems> get allCartItems {
+    return List.from(_cartitems);
+  }
+
+  List<CartItems> get displayedCartItems() {
+    if (!_isPaid) {
+      return List.from(
+          _cartitems.where((CartItems items) => !items.isPaid).toList());
+    }
+    return List.from(_cartitems);
+  }
+
+  int get selectedCartItemIndex {
+    return _cartitems.indexWhere((CartItems items) {
+      return items.id == _selCartId;
+    });
+  }
+
+   CartItems get selectedCart {
+    if (selectedCartId == null) {
+      return null;
+    }
+    return _cartitems.firstWhere((CartItems cartItems) {
+      return cartItems.id == selectedCartId;
+    });
+  }
+
+  String get selectedCartId {
+    return _selCartId;
+  }
+
+
+  Future<bool> addCart(String catId, String prodId, String prodTitle,String prodDescription,
+  String prodImage,String prodImagePath,
+      double prodPrice) async {
+    _isLoading = true;
+    notifyListeners();
+
+    final Map<String, dynamic> cartItems = {
+      'cat_id': catId,
+      'prod_id': prodId,
+      'prod_title': prodTitle,
+      'prod_description': prodDescription,
+      'prod_price': prodPrice,
+      'userEmail': _authenticatedUser.email,
+      'userId': _authenticatedUser.id,
+      'prod_imagePath':prodImagePath,
+      'prod_image':prodImage,
+      'isPaid':false,
+      'isDelivered':false
+    };
+    try {
+      final http.Response response = await http.post(
+          'https://flutter-products-df0ff.firebaseio.com/cart.json?auth=${_authenticatedUser.token}',
+          body: json.encode(cartItems));
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+      final Map<String, dynamic> responseData = json.decode(response.body);
+
+      final CartItems newItems = CartItems(
+          id: responseData['name'],
+          catId: catId,
+          prodId: prodId,
+          prodTitle: prodTitle,
+          prodDescription:prodDescription,
+          prodPrice: prodPrice,
+          prodImagePath:prodImagePath,
+          prodImage:prodImage,
+          userEmail: _authenticatedUser.email,
+          userId: _authenticatedUser.id);
+      _cartitems.add(newItems);
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (error) {
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> updateCartItem(String catId, String prodId, String prodTitle,String prodDescription,
+  String prodImage,String prodImagePath,
+      double prodPrice) async {
+    _isLoading = true;
+    notifyListeners();
+    
+    
+
+    final Map<String, dynamic> updateData = {
+      'cat_id': catId,
+      'prod_id': prodId,
+      'prod_title': prodTitle,
+      'prod_description': prodDescription,
+      'prod_price': prodPrice,
+      'userEmail': _authenticatedUser.email,
+      'userId': _authenticatedUser.id,
+      'prod_imagePath':prodImagePath,
+      'prod_image':prodImage,
+      'isPaid':false,
+      'isDelivered':false
+    };
+    try {
+      await http.put(
+          'https://flutter-products-df0ff.firebaseio.com/cart/${selectedCart.id}.json?auth=${_authenticatedUser.token}',
+          body: json.encode(updateData));
+
+      _isLoading = false;
+
+      final CartItems updatedItem = CartItems(
+          id: selectedCart.id,
+          catId: catId,
+          prodId: prodId,
+          prodTitle: prodTitle,
+          prodDescription:prodDescription,
+          prodPrice: prodPrice,
+          prodImagePath:prodImagePath,
+          prodImage:prodImage,
+          userEmail: _authenticatedUser.email,
+          userId: _authenticatedUser.id);
+
+      _cartitems[selectedCartItemIndex] = updatedItem;
+      notifyListeners();
+      return true;
+    } catch (error) {
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> deleteCartItem() {
+    _isLoading = true;
+    final deletedCartItemId = selectedCart.id;
+    _cartitems.removeAt(selectedCartItemIndex);
+    _selCartId = null;
+    notifyListeners();
+    return http
+        .delete(
+            'https://flutter-products-df0ff.firebaseio.com/cart/$deletedCartItemId.json?auth=${_authenticatedUser.token}')
+        .then((http.Response response) {
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    }).catchError((error) {
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    });
+  }
+
+  Future<Null> fetchCarts(
+      {onlyforUser = false, clearExisting = false, isPaid=false}) {
+    print('Cart list');
+    _isLoading = true;
+    if (clearExisting) _cartitems = [];
+    notifyListeners();
+    String query;
+    query =
+        'https://flutter-products-df0ff.firebaseio.com/cart.json?auth=${_authenticatedUser.token}';
+
+    print('Query is $query');
+    return http.get(query).then<Null>((http.Response response) {
+      _isLoading = false;
+      final List<CartItems> fetchedCartItemList = [];
+      final Map<String, dynamic> cartListData = json.decode(response.body);
+      if (cartListData == null) {
+        _isLoading = false;
+        notifyListeners();
+        return;
+      }
+      print('Cart list count ${cartListData.length}');
+      cartListData.forEach((String cartId, dynamic cartData) {
+        final CartItems cartItem = CartItems(
+            id: cartId,
+            catId: cartListData['cat_id'],
+            prodId: cartListData['prod_id'],
+            prodTitle: cartListData['prod_title'],
+            prodDescription: cartListData['prod_title'],
+            prodPrice: cartListData['prod_price'],
+            prodImagePath: cartListData['prod_imagePath'],
+            prodImage: cartListData['prod_image'],
+            userEmail: _authenticatedUser.email,
+            userId: _authenticatedUser.id
+
+           );
+        fetchedCartItemList.add(cartItem);
+      });
+      _cartitems = fetchedCartItemList.where((CartItems cartItem ) {
+       
+          print(
+              'Cart list fetched count ${_cartitems.length} ');
+          return (cartItem.userId == _authenticatedUser.id) &&
+              (cartItem.isPaid == isPaid);
+        
+        
+      }).toList();
+
+      print('Cart list fetched count ${_cartitems.length}');
+      _isLoading = false;
+      notifyListeners();
+      _selCartId = null;
+    }).catchError((error) {
+      print('Cart list fetched count error.');
+      _isLoading = false;
+      notifyListeners();
+      return;
+    });
+  }
+
+  void toggleCartIsPaidStatus() async {
+    final bool isPaid =
+        selectedCart.isPaid == null ? false : selectedCart.isPaid;
+    
+
+    final int toggledCartIndex = _cartitems.indexWhere((CartItems cartitem) {
+      return cartitem.id == selectedCart.id;
+    });
+    final CartItems updatecart = CartItems(
+        id: selectedCart.id,
+        catId: selectedCart.catId,
+          prodId: selectedCart.prodId,
+          prodTitle: selectedCart.prodTitle,
+          prodDescription:selectedCart.prodDescription,
+          prodPrice: selectedCart.prodPrice,
+          prodImagePath:selectedCart.prodImagePath,
+          prodImage:selectedCart.prodImage,
+          userEmail: _authenticatedUser.email,
+          userId: _authenticatedUser.id);
+    _cartitems[toggledCartIndex] = updatecart;
+    notifyListeners();
+    http.Response response;
+    if (!isPaid) {
+      response = await http.put(
+          'https://flutter-products-df0ff.firebaseio.com/cart/${selectedCart.id}.json?auth=${_authenticatedUser.token}',
+          body: json.encode(true));
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        final CartItems updateCart = CartItems(
+            id: selectedCart.id,
+             catId: selectedCart.catId,
+          prodId: selectedCart.prodId,
+          prodTitle: selectedCart.prodTitle,
+          prodDescription:selectedCart.prodDescription,
+          prodPrice: selectedCart.prodPrice,
+          prodImagePath:selectedCart.prodImagePath,
+          prodImage:selectedCart.prodImage,
+          userEmail: _authenticatedUser.email,
+          userId: _authenticatedUser.id);
+        _cartitems[selectedCartItemIndex] = updateCart;
+        notifyListeners();
+      }
+    } else {
+      response = await http.delete(
+          'https://flutter-products-df0ff.firebaseio.com/cart/${selectedCart.id}.json?auth=${_authenticatedUser.token}');
+    }
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      final CartItems updateCart = CartItems(
+          id: selectedCart.id,
+          catId: selectedCart.catId,
+          prodId: selectedCart.prodId,
+          prodTitle: selectedCart.prodTitle,
+          prodDescription:selectedCart.prodDescription,
+          prodPrice: selectedCart.prodPrice,
+          prodImagePath:selectedCart.prodImagePath,
+          prodImage:selectedCart.prodImage,
+          userEmail: _authenticatedUser.email,
+          userId: _authenticatedUser.id);
+      _cartitems[selectedCartItemIndex] = updateCart;
+      notifyListeners();
+    }
+    //_selProductId = null;
+  }
+
+ }
 
 mixin UserModel on Connected_dbModel {
   Timer _authTimer;

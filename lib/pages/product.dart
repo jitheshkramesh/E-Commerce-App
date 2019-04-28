@@ -6,10 +6,13 @@ import 'package:map_view/map_view.dart';
 import '../widgets/ui_elements/title_default.dart';
 import '../widgets/products/product_fab.dart';
 import '../models/product.dart';
+import '../scoped_model/main.dart';
 
 class ProductPage extends StatelessWidget {
+  final MainModel model;
   final Product product;
-  ProductPage(this.product);
+
+  ProductPage(this.product, this.model);
 
 //map view commented
   void _showMap() {
@@ -151,7 +154,7 @@ class ProductPage extends StatelessWidget {
             )
           ],
         ),
-        floatingActionButton: ProductFab(product),
+        floatingActionButton: ProductFab(product, model),
       ),
     );
   }

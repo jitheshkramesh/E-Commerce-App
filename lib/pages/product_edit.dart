@@ -92,6 +92,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
         itemSubmitted: (item) {
           setState(() {
             searchCategoryTextField.textField.controller.text = item.catDesc;
+            _categoryTextEditController.text = item.id;
           });
         },
         itemBuilder: (context, item) {
@@ -235,6 +236,9 @@ class _ProductEditPageState extends State<ProductEditPage> {
           child: ListView(
             padding: EdgeInsets.symmetric(horizontal: targetPadding / 2),
             children: <Widget>[
+              _isLoading
+                  ? CircularProgressIndicator()
+                  : _buildCategoryTextField(),
               _buildTitleTextField(product),
               _buildDescriptionTextField(product),
               _buildPriceTextField(product),
@@ -245,9 +249,6 @@ class _ProductEditPageState extends State<ProductEditPage> {
               SizedBox(
                 height: 10.0,
               ),
-              _isLoading
-                  ? CircularProgressIndicator()
-                  : _buildCategoryTextField(),
               ImageInput(_setImage, product),
 
               SizedBox(

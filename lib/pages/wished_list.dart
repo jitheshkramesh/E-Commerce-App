@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
+
 import '../widgets/products/products.dart';
 import '../widgets/ui_elements/drawer_list.dart';
 import '../scoped_model/main.dart';
+
+import '../notifications/cartlist_icon_counter.dart';
+import '../notifications/wishlist_icon_counter.dart';
 
 class WishedListPage extends StatefulWidget {
   final MainModel model;
@@ -55,16 +59,17 @@ class _WishedListStatePage extends State<WishedListPage> {
         actions: <Widget>[
           ScopedModelDescendant<MainModel>(
             builder: (BuildContext context, Widget child, MainModel model) {
-              return IconButton(
-                icon: Icon(model.displayFavoritesOnly
-                    ? Icons.favorite
-                    : Icons.favorite_border),
-                onPressed: () {
-                  model.toggleDisplayMode();
-                },
-              );
+              return new WishListIconCounter(model);
             },
-          )
+          ),
+          CartListIconCounter(widget.model),
+          // new IconButton(
+          //   icon: Icon(Icons.shopping_cart),
+          //   onPressed: () {
+          //     Navigator.push(
+          //         context, MaterialPageRoute(builder: (context) => new Cart()));
+          //   },
+          // ),
         ],
       ),
       body: _buildProductList(),

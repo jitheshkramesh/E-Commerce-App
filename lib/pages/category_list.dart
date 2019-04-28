@@ -46,7 +46,7 @@ class _CategoryistPageState extends State<CategoryListPage> {
       return ListView.builder(
         itemBuilder: (BuildContext context, int index) {
           return Dismissible(
-            key: Key(model.allCategories[index].catDesc),
+            key: Key(model.allCategories[index].id),
             onDismissed: (DismissDirection direction) {
               if (direction == DismissDirection.endToStart) {
                 model.selectCategory(model.allCategories[index].id);

@@ -9,6 +9,7 @@ class Product {
   final String imagePath;
   final double price;
   final bool isFavorite;
+  final bool isCart;
   final String userEmail;
   final String userId;
   final String catId;
@@ -25,5 +26,6 @@ class Product {
       @required this.location,
       @required this.imagePath,
       @required this.catId,
-      this.isFavorite = false});
+      this.isFavorite = false,
+      this.isCart = false});
 }

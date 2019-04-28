@@ -127,18 +127,18 @@ class _CategoryEditPageState extends State<CategoryEditPage> {
     final double deviceWidth = MediaQuery.of(context).size.width;
     final double targetWidth = deviceWidth > 550.0 ? 500.0 : deviceWidth * 0.95;
     final double targetPadding = deviceWidth - targetWidth;
-    print('Category isActive value checking ');
-    try {
-      print('Category isActive value : ${category.catIsActive}');
-      if (category.catIsActive == null) {
-        category.catIsActive = false;
-      }
-      selectedRadio =
-          category.catIsActive != null ? category.catIsActive ? 1 : 2 : 0;
-    } catch (error) {
-      print('Category isActive value error :catch');
-      selectedRadio = 0;
-    }
+    // print('Category isActive value checking ');
+    // try {
+    //   print('Category isActive value : ${category.catIsActive}');
+    //   if (category.catIsActive == null) {
+    //     category.catIsActive = false;
+    //   }
+    //   selectedRadio =
+    //       category.catIsActive != null ? category.catIsActive ? 1 : 2 : 0;
+    // } catch (error) {
+    //   print('Category isActive value error :catch');
+    //   //selectedRadio = 0;
+    // }
 
     return GestureDetector(
       onTap: () {

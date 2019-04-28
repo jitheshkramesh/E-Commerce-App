@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
-import '../widgets/products/categories.dart';
+
 import '../widgets/ui_elements/drawer_list.dart';
 import '../scoped_model/main.dart';
+import '../components/cart.dart';
+import '../components/list_categories.dart';
 
 class CategoriesPage extends StatefulWidget {
   final MainModel model;
@@ -15,7 +17,6 @@ class CategoriesPage extends StatefulWidget {
 }
 
 class _CategoryStatePage extends State<CategoriesPage> {
-
   @override
   initState() {
     //widget.model.fetchCategories();
@@ -24,19 +25,27 @@ class _CategoryStatePage extends State<CategoriesPage> {
   }
 
   Widget _buildSideDrawer(BuildContext context) {
-    return  DrawerList(widget.model);
+    return DrawerList(widget.model);
   }
 
   Widget _buildCategoryList() {
     return ScopedModelDescendant(
       builder: (BuildContext context, Widget child, MainModel model) {
         Widget content = Center(child: Text('No Categories Found!'));
-        if (model.displayedProducts.length > 0 && !model.isLoading) {
-          content = Categories();
+        if (model.displayedCategories.length > 0 && !model.isLoading) {
+          //content = Categories();
+          content = new Column(
+            children: <Widget>[
+              Flexible(
+                child: ListCategories(widget.model),
+              )
+            ],
+          );
         } else if (model.isLoading) {
           content = Center(child: CircularProgressIndicator());
         }
-        return RefreshIndicator(onRefresh: model.fetchProducts, child: content);
+        return RefreshIndicator(
+            onRefresh: model.fetchCategories, child: content);
       },
     );
   }
@@ -52,15 +61,22 @@ class _CategoryStatePage extends State<CategoriesPage> {
           ScopedModelDescendant<MainModel>(
             builder: (BuildContext context, Widget child, MainModel model) {
               return IconButton(
-                icon: Icon(model.displayFavoritesOnly
-                    ? Icons.favorite
-                    : Icons.favorite_border),
+                icon: Icon(Icons.favorite),
                 onPressed: () {
-                  model.toggleDisplayMode();
+                  Navigator.pushReplacementNamed(context, '/wishedList');
                 },
               );
             },
-          )
+          ),
+          new IconButton(
+            icon: Icon(Icons.shopping_cart),
+            onPressed: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => new Cart(widget.model)));
+            },
+          ),
         ],
       ),
       body: _buildCategoryList(),

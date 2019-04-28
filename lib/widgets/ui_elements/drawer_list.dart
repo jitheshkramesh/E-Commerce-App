@@ -3,6 +3,7 @@ import './logout_list_tile.dart';
 import './drawer_profile.dart';
 
 import '../../scoped_model/main.dart';
+import '../../components/cart.dart';
 
 class DrawerList extends StatelessWidget {
   final MainModel model;
@@ -22,14 +23,43 @@ class DrawerList extends StatelessWidget {
           // ),
           DrawerProfile(model),
           ListTile(
-            leading: Icon(Icons.category),
+            leading: Icon(
+              Icons.home,
+              color: Colors.green,
+            ),
+            title: Text('Adv Home'),
+            onTap: () {
+              Navigator.pushReplacementNamed(context, '/advhome');
+            },
+          ),
+          Divider(),
+          ListTile(
+            leading: Icon(
+              Icons.home,
+              color: Colors.green,
+            ),
+            title: Text('Home'),
+            onTap: () {
+              Navigator.pushReplacementNamed(context, '/home');
+            },
+          ),
+          Divider(),
+          ListTile(
+            leading: Icon(
+              Icons.category,
+              color: Colors.red,
+            ),
             title: Text('Category'),
             onTap: () {
               Navigator.pushReplacementNamed(context, '/category');
             },
-          ), Divider(),
+          ),
+          Divider(),
           ListTile(
-            leading: Icon(Icons.assignment),
+            leading: Icon(
+              Icons.assignment,
+              color: Colors.red,
+            ),
             title: Text('Manage Categories'),
             onTap: () {
               Navigator.pushReplacementNamed(context, '/catadmin');
@@ -37,7 +67,10 @@ class DrawerList extends StatelessWidget {
           ),
           Divider(),
           ListTile(
-            leading: Icon(Icons.list),
+            leading: Icon(
+              Icons.list,
+              color: Colors.red,
+            ),
             title: Text('All Products'),
             onTap: () {
               Navigator.pushReplacementNamed(context, '/');
@@ -45,7 +78,10 @@ class DrawerList extends StatelessWidget {
           ),
           Divider(),
           ListTile(
-            leading: Icon(Icons.assignment),
+            leading: Icon(
+              Icons.assignment,
+              color: Colors.red,
+            ),
             title: Text('Manage Products'),
             onTap: () {
               Navigator.pushReplacementNamed(context, '/admin');
@@ -53,7 +89,10 @@ class DrawerList extends StatelessWidget {
           ),
           Divider(),
           ListTile(
-            leading: Icon(Icons.favorite),
+            leading: Icon(
+              Icons.favorite,
+              color: Colors.red,
+            ),
             title: Text('Wished List'),
             onTap: () {
               Navigator.pushReplacementNamed(context, '/wishedList');
@@ -61,15 +100,22 @@ class DrawerList extends StatelessWidget {
           ),
           Divider(),
           ListTile(
-            leading: Icon(Icons.shopping_cart),
-            title: Text('Cart Items'),
-            onTap: () {
-              Navigator.pushReplacementNamed(context, '/');
+            leading: Icon(
+              Icons.shopping_cart,
+              color: Colors.red,
+            ),
+            title: Text('Shopping Cart'),
+            onTap: (){
+              Navigator.push(
+                  context, MaterialPageRoute(builder: (context) => new Cart(model)));
             },
           ),
           Divider(),
           ListTile(
-            leading: Icon(Icons.person),
+            leading: Icon(
+              Icons.person,
+              color: Colors.blue,
+            ),
             title: Text('User Accounts'),
             onTap: () {
               Navigator.pushReplacementNamed(context, '/');

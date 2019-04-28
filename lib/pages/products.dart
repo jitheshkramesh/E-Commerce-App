@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
-import '../widgets/products/products.dart';
+
 import '../widgets/ui_elements/drawer_list.dart';
 import '../scoped_model/main.dart';
+
+import '../components/list_products.dart';
+import '../notifications/wishlist_icon_counter.dart';
+import '../notifications/cartlist_icon_counter.dart';
 
 class ProductsPage extends StatefulWidget {
   final MainModel model;
@@ -20,6 +24,7 @@ class _ProductStatePage extends State<ProductsPage> {
   @override
   initState() {
     widget.model.fetchProducts();
+    //widget.model.allProducts;
     print('Image path is :');
     print(widget.model.userRegister.imagePath);
     imagePath = widget.model.userRegister.imagePath.toString();
@@ -27,7 +32,7 @@ class _ProductStatePage extends State<ProductsPage> {
   }
 
   Widget _buildSideDrawer(BuildContext context) {
-    return  DrawerList(widget.model);
+    return DrawerList(widget.model);
   }
 
   Widget _buildProductList() {
@@ -35,7 +40,14 @@ class _ProductStatePage extends State<ProductsPage> {
       builder: (BuildContext context, Widget child, MainModel model) {
         Widget content = Center(child: Text('No Products Found!'));
         if (model.displayedProducts.length > 0 && !model.isLoading) {
-          content = Products();
+          //content = Products();
+          content = new Column(
+            children: <Widget>[
+              Flexible(
+                child: ListProducts(widget.model),
+              )
+            ],
+          );
         } else if (model.isLoading) {
           content = Center(child: CircularProgressIndicator());
         }
@@ -54,19 +66,21 @@ class _ProductStatePage extends State<ProductsPage> {
         actions: <Widget>[
           ScopedModelDescendant<MainModel>(
             builder: (BuildContext context, Widget child, MainModel model) {
-              return IconButton(
-                icon: Icon(model.displayFavoritesOnly
-                    ? Icons.favorite
-                    : Icons.favorite_border),
-                onPressed: () {
-                  model.toggleDisplayMode();
-                },
-              );
+              return WishListIconCounter(widget.model);
             },
-          )
+          ),
+          CartListIconCounter(widget.model),
         ],
       ),
       body: _buildProductList(),
+      // body: new Column(
+      //   children: <Widget>[
+
+      //     Flexible(
+      //       child: ListProducts(widget.model),
+      //     )
+      //   ],
+      // ),
     );
   }
 }

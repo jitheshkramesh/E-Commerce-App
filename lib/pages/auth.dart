@@ -125,7 +125,7 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
 
     if (successInformation['success']) {
       //Navigator.pushReplacementNamed(context, '/');
-      print('Login success Test');
+      print('Login success Test');  
     } else {
       showDialog(
           context: context,

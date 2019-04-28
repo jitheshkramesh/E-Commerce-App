@@ -13,6 +13,8 @@ import './pages/wished_list.dart';
 import './pages/categories.dart';
 import './pages/category.dart';
 import './pages/category_admin.dart';
+import './pages/homePage.dart';
+import './pages/adv_home.dart';
 
 import './scoped_model/main.dart';
 
@@ -93,6 +95,10 @@ class _MyAppState extends State<MyApp> {
           //   },
           // ),
           //'/products': (BuildContext context) => ProductsPage(_model),
+          '/home': (BuildContext context) =>
+              !_isAuthenticated ? AuthPage() : HomePage(_model),
+          '/advhome': (BuildContext context) =>
+              !_isAuthenticated ? AuthPage() : AdvHomePage(_model),
           '/admin': (BuildContext context) =>
               !_isAuthenticated ? AuthPage() : ProductsAdminPage(_model),
           '/wishedList': (BuildContext context) =>
@@ -120,7 +126,7 @@ class _MyAppState extends State<MyApp> {
             });
             return CustomeRoute<bool>(
               builder: (BuildContext context) =>
-                  !_isAuthenticated ? AuthPage() : ProductPage(product),
+                  !_isAuthenticated ? AuthPage() : ProductPage(product, _model),
             );
           }
           if (pathElements[1] == 'category') {
